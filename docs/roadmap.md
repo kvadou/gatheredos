@@ -1,7 +1,7 @@
 ## **If this were my roadmap**
 
 > **Status note (July 14, 2026):** This document preserves Alexis's original
-> product-development prompts and therefore contains the former HomeOS name.
+> product-development prompts and therefore contains the former GatheredOS name.
 > The canonical product name is GatheredOS, and current implementation status
 > lives in `docs/HANDOFF.md`. The constitution, ingestion pipeline, knowledge
 > graph, grounded Ask citations, and proactive insight foundations described
@@ -35,11 +35,11 @@ sequenced in the [Launch Readiness Plan](launch-readiness-plan.md).
 
 At that point, you'll have something that's no longer just a compelling prototype—it will be a product people can actually use. That's the milestone I'd optimize for now.
 
-[https://v0.app/chat/homeos-dashboard-design-eVVBzVQ8wYi?ref=DMWO6X](https://v0.app/chat/homeos-dashboard-design-eVVBzVQ8wYi?ref=DMWO6X)
+[https://v0.app/chat/gatheredos-dashboard-design-eVVBzVQ8wYi?ref=DMWO6X](https://v0.app/chat/gatheredos-dashboard-design-eVVBzVQ8wYi?ref=DMWO6X)
 
 ## **Claude Prompt \#1**
 
-I have completed the UX for HomeOS, an AI operating system for homeowners. I now want to define the underlying intelligence model. Help me design every object HomeOS understands (Home, System, Room, Project, Document, Contractor, Warranty, Receipt, Maintenance Task, Insight, Recommendation, etc.). For each object define:
+I have completed the UX for GatheredOS, an AI operating system for homeowners. I now want to define the underlying intelligence model. Help me design every object GatheredOS understands (Home, System, Room, Project, Document, Contractor, Warranty, Receipt, Maintenance Task, Insight, Recommendation, etc.). For each object define:
 
 • attributes  
  • relationships  
@@ -48,7 +48,7 @@ I have completed the UX for HomeOS, an AI operating system for homeowners. I now
  • user-generated fields  
  • examples
 
-Think like you're designing the internal knowledge graph for HomeOS.
+Think like you're designing the internal knowledge graph for GatheredOS.
 
 # **Step 2: Design the AI Engine ⭐⭐⭐⭐⭐**
 
@@ -88,7 +88,7 @@ Worth Knowing insight generated
 
 ↓
 
-Ask HomeOS gains new knowledge
+Ask GatheredOS gains new knowledge
 
 That is your product.
 
@@ -96,7 +96,7 @@ That is your product.
 
 Claude Prompt \#2
 
-Help me design the HomeOS intelligence engine. For every user action (uploading a receipt, adding a contractor, completing maintenance, creating a project, connecting Gmail, uploading an inspection report, etc.), describe every downstream action HomeOS should automatically perform. I want HomeOS to feel proactive and continuously build knowledge rather than simply storing information.
+Help me design the GatheredOS intelligence engine. For every user action (uploading a receipt, adding a contractor, completing maintenance, creating a project, connecting Gmail, uploading an inspection report, etc.), describe every downstream action GatheredOS should automatically perform. I want GatheredOS to feel proactive and continuously build knowledge rather than simply storing information.
 
 ---
 
@@ -120,7 +120,7 @@ What citations?
 
 Where do costs come from?
 
-How should HomeOS answer?
+How should GatheredOS answer?
 
 Do this for 100+ questions.
 
@@ -128,9 +128,9 @@ Do this for 100+ questions.
 
 Claude Prompt \#3
 
-Help me design the reasoning engine for HomeOS. Generate 100 realistic homeowner questions. For each question explain:
+Help me design the reasoning engine for GatheredOS. Generate 100 realistic homeowner questions. For each question explain:
 
-• what HomeOS needs to know  
+• what GatheredOS needs to know  
  • which objects it searches  
  • what reasoning it performs  
  • how it cites evidence  
@@ -160,7 +160,7 @@ Your roadmap naturally becomes:
 * AI extraction  
 * Knowledge graph  
 * Maintenance engine  
-* Ask HomeOS  
+* Ask GatheredOS  
 * Worth Knowing  
 * Notifications
 
@@ -191,9 +191,9 @@ Your roadmap naturally becomes:
 
 ## **One more thing I'd create before writing significant code**
 
-I'd write a **HomeOS Constitution**—a 10–15 page document that answers:
+I'd write a **GatheredOS Constitution**—a 10–15 page document that answers:
 
-* What is HomeOS?  
+* What is GatheredOS?  
 * What problems does it solve?  
 * What principles does it follow?  
 * What will it never become?  

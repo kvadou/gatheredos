@@ -76,7 +76,7 @@ struct CaptureView: View {
             .fullScreenCover(isPresented: $showLiveScanner) {
                 LiveItemScanner { image, evidence in
                     showLiveScanner = false
-                    if let itemID = evidence?.homeOSItemID {
+                    if let itemID = evidence?.gatheredOSItemID {
                         dismiss()
                         onOpenItem?(itemID)
                     } else if let image { Task { await handle(image, liveEvidence: evidence) } }
@@ -549,10 +549,10 @@ struct CaptureView: View {
 struct LiveScanEvidence {
     let code: (value: String, format: String)?
     let text: String
-    var homeOSItemID: String? { code.flatMap { HomeOSCode.itemID(from: $0.value) } }
+    var gatheredOSItemID: String? { code.flatMap { GatheredOSCode.itemID(from: $0.value) } }
 }
 
-private enum HomeOSCode {
+private enum GatheredOSCode {
     static func itemID(from value: String) -> String? {
         guard let url = webURL(from: value),
               url.host?.lowercased() == Config.apiBaseURL.host?.lowercased() else { return nil }
@@ -570,7 +570,7 @@ private enum HomeOSCode {
     }
 }
 
-/// Full-screen live text/code scanner. The user confirms the frame before HomeOS analyzes it.
+/// Full-screen live text/code scanner. The user confirms the frame before GatheredOS analyzes it.
 private struct LiveItemScanner: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var model = LiveItemScannerModel()
@@ -595,14 +595,14 @@ private struct LiveItemScanner: View {
                     Button {
                         capture(model.evidence)
                     } label: {
-                        if model.evidence.homeOSItemID != nil {
+                        if model.evidence.gatheredOSItemID != nil {
                             Label("Open saved item", systemImage: "house.fill").font(.headline).padding(.horizontal, 20).frame(minHeight: 52).background(.white, in: Capsule()).foregroundStyle(Color.homeNavy)
                         } else {
                             ZStack { Circle().fill(.white).frame(width: 72, height: 72); Circle().stroke(.black.opacity(0.25), lineWidth: 3).frame(width: 62, height: 62) }
                         }
                     }
-                    .accessibilityLabel(model.evidence.homeOSItemID != nil ? "Open saved item" : "Capture item")
-                    Text(model.evidence.homeOSItemID != nil ? "GatheredOS label found" : model.latestCodeFound ? "Code found. Capture to identify what it belongs to." : "Hold the label steady, then capture").font(.caption).foregroundStyle(.white).shadow(radius: 2)
+                    .accessibilityLabel(model.evidence.gatheredOSItemID != nil ? "Open saved item" : "Capture item")
+                    Text(model.evidence.gatheredOSItemID != nil ? "GatheredOS label found" : model.latestCodeFound ? "Code found. Capture to identify what it belongs to." : "Hold the label steady, then capture").font(.caption).foregroundStyle(.white).shadow(radius: 2)
                 }.padding(.bottom, 28)
             }
         }
@@ -612,7 +612,7 @@ private struct LiveItemScanner: View {
 
     private func capture(_ evidence: LiveScanEvidence) {
         Task {
-            let image = evidence.homeOSItemID == nil ? try? await model.scanner.capturePhoto() : nil
+            let image = evidence.gatheredOSItemID == nil ? try? await model.scanner.capturePhoto() : nil
             model.scanner.stopScanning()
             onCapture(image, evidence)
         }
@@ -632,7 +632,7 @@ private struct LiveItemScanner: View {
             recognizesMultipleItems: true,
             isHighFrameRateTrackingEnabled: true,
             isPinchToZoomEnabled: true,
-            // HomeOS provides its own single status pill; Apple's guidance occupies
+            // GatheredOS provides its own single status pill; Apple's guidance occupies
             // the same top-center space and the two labels overlap on a phone.
             isGuidanceEnabled: false,
             isHighlightingEnabled: true

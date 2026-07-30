@@ -61,7 +61,7 @@ export async function getApiUser(req: Request): Promise<ApiUser | null> {
 export async function getApiContext(req: Request): Promise<ApiContext | null> {
   const auth = await getApiUser(req)
   if (!auth) return null
-  const selected = req.headers.get('authorization') ? null : cookieValue(req.headers.get('cookie'), 'homeos_current_home')
+  const selected = req.headers.get('authorization') ? null : cookieValue(req.headers.get('cookie'), 'gatheredos_current_home')
   return resolveHome(auth.supabase, auth.user, selected)
 }
 

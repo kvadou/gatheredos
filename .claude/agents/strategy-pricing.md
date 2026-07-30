@@ -1,6 +1,6 @@
 ---
 name: strategy-pricing
-description: "Fortune 500-level pricing strategy analysis for HomeOS. Use when you need pricing optimization, tier design, revenue modeling, or competitive pricing intelligence."
+description: "Fortune 500-level pricing strategy analysis for GatheredOS. Use when you need pricing optimization, tier design, revenue modeling, or competitive pricing intelligence."
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
 model: inherit
 ---
@@ -30,7 +30,7 @@ For each competitor (Amazon Alexa, Google Home, Apple HomeKit, HomeZada, Centriq
 
 ### Value-Based Pricing Model
 - Identify the primary value metric for Homeowners, renters, and property managers who need an intelligent assistant for household management, maintenance tracking, and home organization
-- Quantify the economic value HomeOS delivers (time saved, revenue gained, cost reduced)
+- Quantify the economic value GatheredOS delivers (time saved, revenue gained, cost reduced)
 - Calculate willingness-to-pay based on value delivered
 - Map value perception across customer segments
 

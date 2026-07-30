@@ -126,7 +126,7 @@ export default async function CarePage() {
         {/* A quiet signal the house is being watched between visits */}
         <CareActivity activity={activity} />
 
-        {/* Deeper patterns HomeOS has noticed */}
+        {/* Deeper patterns GatheredOS has noticed */}
         <CareInsights insights={careInsights} />
 
         {/* Progressive disclosure below: reference material, collapsed */}

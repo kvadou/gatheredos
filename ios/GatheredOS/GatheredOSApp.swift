@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct HomeOSApp: App {
+struct GatheredOSApp: App {
     @State private var supabase = SupabaseService()
 
     init() {

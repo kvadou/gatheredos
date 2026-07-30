@@ -144,7 +144,7 @@ export function ItemDetail({ item, edit, rooms, support }: { item: LibraryItem; 
         </section>
       )}
 
-      {/* Recommendations — what HomeOS thinks you should do */}
+      {/* Recommendations — what GatheredOS thinks you should do */}
       {item.recommendations && item.recommendations.length > 0 && (
         <section className="rounded-3xl border border-primary/15 bg-primary/5 p-6 sm:p-7">
           <div className="flex items-center gap-2 text-primary">

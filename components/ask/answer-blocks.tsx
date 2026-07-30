@@ -436,7 +436,7 @@ function AnnotatedPhoto({
       <figcaption className="border-b border-border/50 px-4 py-2.5 text-xs text-muted-foreground">
         {caption}
       </figcaption>
-      {/* Legend — HomeOS naming exactly what it sees */}
+      {/* Legend — GatheredOS naming exactly what it sees */}
       <ul className="divide-y divide-border/50">
         {hotspots.map((h, i) => (
           <li key={h.label} className="flex items-center gap-2.5 px-4 py-2.5">

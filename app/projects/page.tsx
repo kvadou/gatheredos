@@ -45,7 +45,7 @@ export default async function ProjectsPage() {
             just spending. Surfaced high, right after what you're building. */}
         <InvestmentOutlook outlook={view.outlook} />
 
-        {/* Where HomeOS gets proactive — personalized next investments */}
+        {/* Where GatheredOS gets proactive — personalized next investments */}
         <RecommendedProjects projects={view.recommended} />
 
         {/* The story of the house, past into future */}

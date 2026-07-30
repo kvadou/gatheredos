@@ -49,6 +49,6 @@ export function QrLabelSheet({ item, roomName }: { item: LabelItem; roomName: st
 function ItemLabel({ item, detail, shortId }: { item: LabelItem; detail: string; shortId: string }) {
   return <article className="flex h-[1in] w-[2.625in] items-center gap-[.09in] overflow-hidden px-[.11in] py-[.07in]">
     <img src={`/api/items/${item.id}/qr`} alt={`QR code for ${item.name}`} className="size-[.78in] shrink-0" />
-    <div className="min-w-0"><p className="truncate text-[11pt] font-semibold leading-tight">{item.name}</p>{detail && <p className="mt-1 line-clamp-2 text-[7.5pt] leading-tight text-[#526979]">{detail}</p>}<p className="mt-1 text-[6.5pt] font-medium tracking-wide text-[#526979]">SCAN WITH HOMEOS · {shortId}</p></div>
+    <div className="min-w-0"><p className="truncate text-[11pt] font-semibold leading-tight">{item.name}</p>{detail && <p className="mt-1 line-clamp-2 text-[7.5pt] leading-tight text-[#526979]">{detail}</p>}<p className="mt-1 text-[6.5pt] font-medium tracking-wide text-[#526979]">SCAN WITH GATHEREDOS · {shortId}</p></div>
   </article>
 }

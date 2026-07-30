@@ -260,6 +260,6 @@ export function clearOnboarding(userId: string) {
   window.localStorage.removeItem(scopedKey(STEP_PREFIX, userId))
   window.localStorage.removeItem(STORAGE_PREFIX)
   window.localStorage.removeItem(STEP_PREFIX)
-  window.localStorage.removeItem('homeos_onboarding_v1')
-  window.localStorage.removeItem('homeos_onboarding_step_v1')
+  window.localStorage.removeItem('gatheredos_onboarding_v1')
+  window.localStorage.removeItem('gatheredos_onboarding_step_v1')
 }

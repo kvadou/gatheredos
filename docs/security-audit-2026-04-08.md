@@ -52,7 +52,7 @@ const ratelimit = new Ratelimit({
 
 ### #3 — Input Sanitization (CRITICAL) — PASS
 
-Zod validation is used consistently. `@homeos/shared` exports validators used in API routes (`createItemSchema`, `createProviderSchema`, etc.). No raw SQL string interpolation found. Prisma parameterizes all queries.
+Zod validation is used consistently. `@gatheredos/shared` exports validators used in API routes (`createItemSchema`, `createProviderSchema`, etc.). No raw SQL string interpolation found. Prisma parameterizes all queries.
 
 ---
 

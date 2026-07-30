@@ -1,7 +1,7 @@
-# HomeOS Phase 2, Knowledge-Graph Object Model
+# GatheredOS Phase 2, Knowledge-Graph Object Model
 
 **Date:** 2026-07-12
-**Scope:** The intelligence layer (Roadmap "Claude Prompt #1"). Defines every object HomeOS understands so ingestion, extraction, memory, citations, and proactive insights have a shared, buildable data model on the live Supabase schema.
+**Scope:** The intelligence layer (Roadmap "Claude Prompt #1"). Defines every object GatheredOS understands so ingestion, extraction, memory, citations, and proactive insights have a shared, buildable data model on the live Supabase schema.
 **Ground truth:** `supabase/migrations/20260711200500_initial_schema.sql` (15 tables, all home-scoped, RLS via `is_home_member(home_id)`).
 
 ## How to read this doc
@@ -75,7 +75,7 @@ For objects where **some columns are user-entered and some are AI-filled**: `ite
 
 **Why two patterns, not one:** forcing `field_provenance` rows for wholly-AI objects (`home_facts`) would double every insert with no gain, since every field already shares one source. Forcing row-level columns onto `items` would lie about the user-typed fields. Each object uses the pattern that matches its authorship.
 
-**Citation surface:** the Ask HomeOS answer blocks (`AnswerBlock` in `lib/ask-data.ts`) already model `warranty`, `cost`, `timeline`, `related` blocks. A cited answer resolves `home_facts.source_extraction_id` / `evidence` → the `files` row → a signed URL, so "HomeOS figured this out" links back to the actual receipt.
+**Citation surface:** the Ask GatheredOS answer blocks (`AnswerBlock` in `lib/ask-data.ts`) already model `warranty`, `cost`, `timeline`, `related` blocks. A cited answer resolves `home_facts.source_extraction_id` / `evidence` → the `files` row → a signed URL, so "GatheredOS figured this out" links back to the actual receipt.
 
 ---
 
@@ -392,7 +392,7 @@ The proactive-intelligence object (Worth Knowing + Care insights). Wholly AI-gen
 
 ### 2.13 Conversation & Message (`conversations`, `messages`), EXISTING tables
 
-The Ask HomeOS transcript and answer store.
+The Ask GatheredOS transcript and answer store.
 
 | Object | Key attributes | Tag | Origin |
 |---|---|---|---|

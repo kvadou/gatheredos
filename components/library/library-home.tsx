@@ -266,7 +266,7 @@ export function LibraryHome({ collections, files, objects, discoveries, understa
         </div>
       </div>
 
-      {/* THE HERO: what HomeOS knows. The intelligence leads, not the folders. */}
+      {/* THE HERO: what GatheredOS knows. The intelligence leads, not the folders. */}
       {!searching && <RecentDiscoveries discoveries={discoveries} understanding={understanding} />}
 
       {/* Folders — browse by how you think about your home (secondary) */}
@@ -389,7 +389,7 @@ function RecentDiscoveries({
   const [showMissing, setShowMissing] = useState(false)
   return (
     <section className="overflow-hidden rounded-3xl border border-border/70 bg-card shadow-sm">
-      {/* Signature Library insight — how much of the home HomeOS understands */}
+      {/* Signature Library insight — how much of the home GatheredOS understands */}
       <div className="border-b border-border/60 bg-sage/[0.06] p-6 sm:p-7">
         <div className="flex items-center gap-2">
           <Sparkles className="size-4 text-sage-foreground" strokeWidth={2} />

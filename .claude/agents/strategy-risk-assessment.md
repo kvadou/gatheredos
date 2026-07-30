@@ -1,6 +1,6 @@
 ---
 name: strategy-risk-assessment
-description: "Deloitte-level risk analysis and scenario planning for HomeOS. Use when you need risk identification, probability/impact assessment, mitigation planning, or scenario modeling."
+description: "Deloitte-level risk analysis and scenario planning for GatheredOS. Use when you need risk identification, probability/impact assessment, mitigation planning, or scenario modeling."
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
 model: inherit
 ---
@@ -88,7 +88,7 @@ Identify 15+ risks across these categories:
 
 ### Black Swan Scenario
 - The unlikely event that changes everything
-- Examples specific to HomeOS and Smart Home / Property Management / AI Assistance
+- Examples specific to GatheredOS and Smart Home / Property Management / AI Assistance
 - Impact if it occurs
 - How to build resilience against it
 

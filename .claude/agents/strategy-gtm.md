@@ -1,6 +1,6 @@
 ---
 name: strategy-gtm
-description: "CSO-level go-to-market strategy for HomeOS. Use when you need launch planning, channel strategy, messaging frameworks, or growth playbooks."
+description: "CSO-level go-to-market strategy for GatheredOS. Use when you need launch planning, channel strategy, messaging frameworks, or growth playbooks."
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
 model: inherit
 ---
@@ -36,7 +36,7 @@ Rank the top 7 customer acquisition channels for Homeowners, renters, and proper
 - **Core Value Proposition**: One sentence that captures why Homeowners, renters, and property managers who need an intelligent assistant for household management, maintenance tracking, and home organization should care
 - **Supporting Messages** (3): Each addressing a key pain point or aspiration
 - **Proof Points**: Evidence that backs up each message (metrics, case studies, testimonials)
-- **Positioning Statement**: For [target customer] who [need], HomeOS is a [category] that [key benefit] unlike [alternatives] because [differentiator]
+- **Positioning Statement**: For [target customer] who [need], GatheredOS is a [category] that [key benefit] unlike [alternatives] because [differentiator]
 
 ### Content Strategy
 For each funnel stage:
@@ -67,14 +67,14 @@ How to split marketing budget across channels:
 - Efficiency metrics (LTV:CAC, payback period)
 
 ### Risk Mitigation
-Top 5 launch risks specific to HomeOS:
+Top 5 launch risks specific to GatheredOS:
 - Risk description
 - Probability and impact
 - Mitigation strategy
 - Contingency plan
 
 ### Quick Wins
-3 tactics that can generate traction within 14 days, specific to HomeOS's current position and resources.
+3 tactics that can generate traction within 14 days, specific to GatheredOS's current position and resources.
 
 ## Research Approach
 

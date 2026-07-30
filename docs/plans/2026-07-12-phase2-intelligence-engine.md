@@ -1,10 +1,10 @@
-# HomeOS Intelligence Engine — Phase 2 Design
+# GatheredOS Intelligence Engine — Phase 2 Design
 
 **Date:** 2026-07-12
 **Status:** Design spec (pre-build). Source of truth for the cascade layer.
-**Scope:** For every user action, the downstream actions HomeOS performs automatically so the product feels proactive and compounds knowledge instead of storing records.
+**Scope:** For every user action, the downstream actions GatheredOS performs automatically so the product feels proactive and compounds knowledge instead of storing records.
 
-The archetype is the roadmap's receipt cascade: `upload receipt → parsed → warranty updated → project cost updated → investment recalculated → maintenance updated → insight generated → Ask HomeOS gains knowledge`. This spec makes that real for the live stack (Next.js 16 server actions + Supabase + Claude on Vercel) without introducing a queue, a worker, or a new service.
+The archetype is the roadmap's receipt cascade: `upload receipt → parsed → warranty updated → project cost updated → investment recalculated → maintenance updated → insight generated → Ask GatheredOS gains knowledge`. This spec makes that real for the live stack (Next.js 16 server actions + Supabase + Claude on Vercel) without introducing a queue, a worker, or a new service.
 
 ---
 
@@ -343,7 +343,7 @@ Receipts and manuals that *contain* warranty terms (§7.1, §7.2) also mint a `w
 
 **User sees:** the home isn't empty after onboarding — it arrives with appliances to confirm, a maintenance calendar, and its first Worth Knowing cards. Single sonnet pass over all answers keeps cost to one call.
 
-### 7.13 Ask a question (Ask HomeOS)
+### 7.13 Ask a question (Ask GatheredOS)
 
 **Trigger:** `POST /api/ask` (already live, streams sonnet). **Claude:** 1 sonnet (answer) + optional 1 for fact capture.
 
@@ -411,7 +411,7 @@ User photographs Home Depot receipt in the app
   Investment   → $1,450 logged against home spend
   Worth Knowing→ "Water heater is new — budget replacement ~2038"
   Timeline     → 2026 "Replaced water heater"
-  Ask HomeOS   → "When did I replace my water heater?" → "July 2026, a Rheem XE50T10 ($1,450)."
+  Ask GatheredOS   → "When did I replace my water heater?" → "July 2026, a Rheem XE50T10 ($1,450)."
 ```
 
 Depth chain: `upload (d0) → item/event/tasks (d1) → forecast insight (d2)`. Stops at 2. Re-uploading the identical JPEG: step 4 finds the hash, returns immediately — zero calls, zero new rows, cost stays $1,450.

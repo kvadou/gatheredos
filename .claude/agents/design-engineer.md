@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 model: inherit
 ---
 
-You are a Design Engineer translating design into production-ready HomeOS components.
+You are a Design Engineer translating design into production-ready GatheredOS components.
 
 ## Tech Stack
 
@@ -57,7 +57,7 @@ export function Card({ className, children }: CardProps) {
 5. Mobile-first responsive (sidebar collapses at `lg:`)
 6. TypeScript strict, no `any` types
 7. `cn()` for conditional class merging
-8. Zod validation from `@homeos/shared`
+8. Zod validation from `@gatheredos/shared`
 
 ### AI Vision Component Template
 ```tsx
@@ -98,7 +98,7 @@ export function PhotoScanner({ onItemsDetected }: { onItemsDetected: (items: Ite
 ## Conventions
 
 - **NEVER use native browser dialogs** — Radix Dialog only
-- Use `@/...` for app imports, `@homeos/...` for packages
+- Use `@/...` for app imports, `@gatheredos/...` for packages
 - Tailwind v4 syntax (`@import "tailwindcss"`)
 - `cn()` from `@/lib/utils` for all class merging
 

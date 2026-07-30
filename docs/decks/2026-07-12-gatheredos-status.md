@@ -7,15 +7,15 @@ paginate: true
 <!-- _class: title -->
 <!-- _footer: "Doug Kvamme · 7/12/26" -->
 
-# HomeOS
+# GatheredOS
 ## Where we are, and where we're going
 
 ---
 
 <!-- _class: quote -->
 
-> HomeOS is not software for houses.
-> HomeOS is confidence for homeowners.
+> GatheredOS is not software for houses.
+> GatheredOS is confidence for homeowners.
 
 ---
 
@@ -32,7 +32,7 @@ paginate: true
 
 - All 7 sections on real data: Dashboard, Care, Projects, Library, Ask, Worth Knowing, Settings
 - Signup, login, password reset, 9-step onboarding
-- Ask HomeOS answers from your home's actual records
+- Ask GatheredOS answers from your home's actual records
 - Stack: Next.js + Supabase, deploys on every push
 
 ---
@@ -87,7 +87,7 @@ Photograph one receipt →
 - Cost logged, project budget updates
 - Maintenance schedule created
 - Warranty tracked, "Worth Knowing" forecast appears
-- Ask HomeOS can now answer "when did we replace it?"
+- Ask GatheredOS can now answer "when did we replace it?"
 
 ---
 

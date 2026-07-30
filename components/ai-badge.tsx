@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 /**
  * The voice of GatheredOS. Anything the AI generated speaks in the first person —
  * like a trusted expert who's been quietly paying attention — rather than a
- * clinical "HOMEOS NOTICED" system label. Pick the phrase that matches what
+ * clinical "GATHEREDOS NOTICED" system label. Pick the phrase that matches what
  * GatheredOS is doing:
  *   - noticed     → an observation about the present ("I noticed")
  *   - learned     → something newly understood ("I've learned")

@@ -10,8 +10,8 @@ const household = createClient(url, anon, { auth: { persistSession: false } })
 let providerId: string | undefined
 
 async function main() {
-  const email = process.env.SERVICE_TEST_EMAIL ?? 'dev@homeos.local'
-  const password = process.env.SERVICE_TEST_PASSWORD ?? 'homeos-dev-2026!'
+  const email = process.env.SERVICE_TEST_EMAIL ?? 'dev@gatheredos.local'
+  const password = process.env.SERVICE_TEST_PASSWORD ?? 'gatheredos-dev-2026!'
   const { data: login, error: loginError } = await household.auth.signInWithPassword({ email, password })
   if (loginError) throw loginError
   const userId = login.user.id

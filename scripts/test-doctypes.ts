@@ -62,8 +62,8 @@ async function main() {
     console.log(`ok: ${msg}`)
   }
 
-  const { data: profile } = await db.from('profiles').select('id').eq('email', 'dev@homeos.local').single()
-  if (!profile) throw new Error('dev@homeos.local not found')
+  const { data: profile } = await db.from('profiles').select('id').eq('email', 'dev@gatheredos.local').single()
+  if (!profile) throw new Error('dev@gatheredos.local not found')
   const { data: member } = await db.from('home_members').select('home_id').eq('user_id', profile.id).limit(1).single()
   if (!member) throw new Error('dev user has no home')
   const homeId = member.home_id

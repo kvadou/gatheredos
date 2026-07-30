@@ -1,4 +1,4 @@
-// Benchmark cost estimates for grounding "estimated" answers in Ask HomeOS —
+// Benchmark cost estimates for grounding "estimated" answers in Ask GatheredOS —
 // national 2026 installed prices and typical lifespans, NOT this home's own
 // records. Adjusted for the home's state via REGIONAL_MULTIPLIER before it
 // reaches the prompt. Cite anything derived from this as type "general",

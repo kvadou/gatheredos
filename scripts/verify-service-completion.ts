@@ -7,8 +7,8 @@ if (!url || !anon || !serviceRole) throw new Error('Supabase environment is inco
 
 const admin = createClient(url, serviceRole, { auth: { persistSession: false } })
 const household = createClient(url, anon, { auth: { persistSession: false } })
-const email = process.env.SERVICE_TEST_EMAIL ?? 'dev@homeos.local'
-const password = process.env.SERVICE_TEST_PASSWORD ?? 'homeos-dev-2026!'
+const email = process.env.SERVICE_TEST_EMAIL ?? 'dev@gatheredos.local'
+const password = process.env.SERVICE_TEST_PASSWORD ?? 'gatheredos-dev-2026!'
 
 const inserted: { caseId?: string; providerId?: string; careEventId?: string } = {}
 

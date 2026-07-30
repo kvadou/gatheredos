@@ -272,7 +272,7 @@
   animation: ob-glow 1.2s ease-out both;
 }
 
-/* Documents "fly" into HomeOS as they're understood. */
+/* Documents "fly" into GatheredOS as they're understood. */
 @keyframes ob-fly-in {
   0% {
     opacity: 0;

@@ -1,4 +1,4 @@
-# HomeOS — Gap Analysis: Path to a Customer-Complete Product
+# GatheredOS — Gap Analysis: Path to a Customer-Complete Product
 
 **Date:** 2026-07-13. **Frame:** pretend a paying customer signs up tomorrow expecting the business plan's promise (the home's digital memory + proactive care + grounded answers, across five pillars). What breaks that promise today, and in what order do we fix it. **Status of record:** everything in `docs/HANDOFF.md` through commit `ca801c6` is live.
 
@@ -25,7 +25,7 @@
 
 | # | Gap | Why it breaks the promise | Size |
 |---|---|---|---|
-| 1.1 | **No outbound channel at all.** No email (Resend key is an empty placeholder), no iOS/web push, no digest, no reminders. Password reset emails silently rate-limited via Supabase's built-in sender; invite links can't be emailed; warranty-expiry insights sit unread in a table. | Pillar 2 and 4 are *proactive* promises. Today HomeOS only talks when opened — it's a filing cabinet, not a caretaker. **This is the single biggest gap.** | L |
+| 1.1 | **No outbound channel at all.** No email (Resend key is an empty placeholder), no iOS/web push, no digest, no reminders. Password reset emails silently rate-limited via Supabase's built-in sender; invite links can't be emailed; warranty-expiry insights sit unread in a table. | Pillar 2 and 4 are *proactive* promises. Today GatheredOS only talks when opened — it's a filing cabinet, not a caretaker. **This is the single biggest gap.** | L |
 | 1.2 | **Nothing runs on a schedule.** Warranty status transitions (active→expiring→expired), seasonal task generation, insight refresh/supersession, digest assembly — all designed, none scheduled. No cron exists anywhere. | Data goes stale the moment the user stops uploading | M |
 | 1.3 | **Engine steps 5–6 unfinished.** Manuals/warranties/inspections/photos only partially mapped (receipts are the only first-class doc type); zero sonnet reasoning passes (no replacement forecasts, no onboarding batch insights, no Ask fact-capture). | "Upload anything, the home gets smarter" is only true for receipts | L |
 | 1.4 | **cost_ref never built.** ROI/budget/replacement-cost answers degrade to generic ranges. | Pillar 3's "real numbers" are still hand-waving (10 of the playbook's 100 questions) | S–M |
@@ -71,7 +71,7 @@ Rough shape: 1–2 focused sessions per phase at today's cadence.
 
 ## 5. Blocked on Doug (accounts/decisions only he can make)
 
-- Domain purchase (+ pick the name story: gethomeos.com?) → DNS for Resend sender + universal links
+- Domain purchase (+ pick the name story: getgatheredos.com?) → DNS for Resend sender + universal links
 - Resend account; Stripe account; RentCast + Mapbox keys (already queued from tonight)
 - Apple: App Store listing assets, privacy labels sign-off
 - Legal: review generated ToS/privacy before publishing

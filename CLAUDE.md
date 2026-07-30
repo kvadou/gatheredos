@@ -1,4 +1,4 @@
-# HomeOS — Project Guide
+# GatheredOS — Project Guide
 
 AI operating system for homeowners. The home's digital memory: devices, documents, maintenance, projects, and an AI assistant that reasons over all of it. Business plan: `docs/business-plan.md`. Roadmap: `docs/roadmap.md`.
 
@@ -7,15 +7,15 @@ AI operating system for homeowners. The home's digital memory: devices, document
 - **Language**: TypeScript (strict — all new files must be .ts/.tsx)
 - **Database + Auth + Storage**: Supabase (Postgres, Supabase Auth via `@supabase/ssr`, `home-files` storage bucket)
 - **Styling**: Tailwind CSS v4 (`@tailwindcss/postcss`) + Base UI (`@base-ui/react`) / shadcn-style components
-- **AI**: Anthropic Claude API (`@anthropic-ai/sdk`) for Ask HomeOS
+- **AI**: Anthropic Claude API (`@anthropic-ai/sdk`) for Ask GatheredOS
 - **Package manager**: pnpm
-- **Deployment**: Vercel (repo: `kvadou/homeos`, push to master deploys) — prod: https://gatherroot.vercel.app
+- **Deployment**: Vercel (repo: `kvadou/gatheredos`, push to master deploys) — prod: https://gatherroot.vercel.app
 
 ## Dev Notes
 - Next 16 renamed `middleware.ts` to `proxy.ts` (export `proxy`) — do not "fix" it back.
 - RSC rule: never pass Lucide icon components (any function) from server to client components.
   Pass icon NAME strings; resolve client-side via the `iconFor()` registries in `lib/*-data.ts`.
-- Demo data: `pnpm dlx tsx scripts/seed.ts --email <email> --wipe` (service role; dev account dev@homeos.local).
+- Demo data: `pnpm dlx tsx scripts/seed.ts --email <email> --wipe` (service role; dev account dev@gatheredos.local).
 - Supabase project ref: gpncqcnklcmqiakvdibg. Migrations push: `supabase db push` (needs SUPABASE_DB_PASSWORD from .env).
 - /admin is direct-URL only, gated by `profiles.is_admin` (service-role queries after the gate).
 
@@ -70,7 +70,7 @@ docs/               — business plan, roadmap, GTM, plans
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY   — server-only (admin + seed)
-ANTHROPIC_API_KEY           — Ask HomeOS
+ANTHROPIC_API_KEY           — Ask GatheredOS
 ```
 
 ## Rules

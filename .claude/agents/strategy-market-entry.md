@@ -1,6 +1,6 @@
 ---
 name: strategy-market-entry
-description: "Global expansion strategist for HomeOS. Use when you need market entry analysis, expansion planning, localization requirements, or geographic/segment expansion strategy."
+description: "Global expansion strategist for GatheredOS. Use when you need market entry analysis, expansion planning, localization requirements, or geographic/segment expansion strategy."
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
 model: inherit
 ---

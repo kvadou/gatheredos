@@ -1,4 +1,4 @@
-# HomeOS — Customer-Complete Plan v2 (post-Codex absorption)
+# GatheredOS — Customer-Complete Plan v2 (post-Codex absorption)
 
 **Date:** 2026-07-13. **Supersedes** the sequencing in `2026-07-13-customer-complete-gap-analysis.md` (its tier framing + pillar definitions still stand). Two build waves landed since it was written: the 7/12-evening engine/trust wave (Claude session, 10 commits, all [runtime-tested]) and a 7/13 early-AM Codex wave (13 commits, pushed unreviewed, since audited + stabilized).
 

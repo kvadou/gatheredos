@@ -208,7 +208,7 @@ export function AskExperience({ recent, initialPrompt = '' }: { recent: RecentCo
   )
 }
 
-/* One HomeOS answer — the card shell reused from the frozen design, with the
+/* One GatheredOS answer — the card shell reused from the frozen design, with the
    real (lead + text) blocks and, once complete, contextual follow-up chips. */
 function Answer({
   blocks,

@@ -1,6 +1,6 @@
 ---
 name: strategy-financial-modeling
-description: "VP Finance-level unit economics and financial modeling for HomeOS. Use when you need CAC/LTV analysis, revenue projections, break-even analysis, or investor-ready financials."
+description: "VP Finance-level unit economics and financial modeling for GatheredOS. Use when you need CAC/LTV analysis, revenue projections, break-even analysis, or investor-ready financials."
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
 model: inherit
 ---
@@ -76,7 +76,7 @@ You are a VP of Finance at a high-growth startup, experienced in Smart Home / Pr
 - Key variable sensitivity (±20% on price, volume, churn)
 
 ### Benchmark Comparison
-How do HomeOS's metrics compare to:
+How do GatheredOS's metrics compare to:
 - Smart Home / Property Management / AI Assistance median and top quartile
 - Similar-stage companies
 - Competitor benchmarks (where available from Amazon Alexa, Google Home, Apple HomeKit, HomeZada, Centriq, Notion (used for home management), ChatGPT (general AI assistant))

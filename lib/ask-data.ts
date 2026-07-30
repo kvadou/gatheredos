@@ -55,7 +55,7 @@ export type Citation = {
   confidence: 'known' | 'estimated' | 'general'
 }
 
-/* What HomeOS stores as an assistant message's content, and what the client
+/* What GatheredOS stores as an assistant message's content, and what the client
    renders. Kept in sync with the /api/ask route handler. */
 export type AnswerContent = { blocks: AnswerBlock[]; citations?: Citation[] }
 
@@ -142,7 +142,7 @@ export const starterQuestions: { text: string; icon: LucideIcon }[] = [
   { text: 'Which projects have the highest ROI?', icon: TrendingUp },
 ]
 
-/* The grounding steps shown while HomeOS "thinks" — reinforces that answers
+/* The grounding steps shown while GatheredOS "thinks" — reinforces that answers
    are drawn from the home's real records, not a generic model. */
 export const groundingSteps = [
   'Searching your documents',

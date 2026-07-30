@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "44359CBF0E7EE205CBCC15CD"
-               BuildableName = "HomeOS.app"
-               BlueprintName = "HomeOS"
-               ReferencedContainer = "container:HomeOS.xcodeproj">
+               BlueprintIdentifier = "0B7B8E356A00A3B08554F64A"
+               BuildableName = "GatheredOS.app"
+               BlueprintName = "GatheredOS"
+               ReferencedContainer = "container:GatheredOS.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -29,10 +29,10 @@
             buildForAnalyzing = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1DE5B794BDCC70285F5B4604"
-               BuildableName = "HomeOSUITests.xctest"
-               BlueprintName = "HomeOSUITests"
-               ReferencedContainer = "container:HomeOS.xcodeproj">
+               BlueprintIdentifier = "BAAAEC968EEDF00D73D16346"
+               BuildableName = "GatheredOSUITests.xctest"
+               BlueprintName = "GatheredOSUITests"
+               ReferencedContainer = "container:GatheredOS.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,10 +46,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "44359CBF0E7EE205CBCC15CD"
-            BuildableName = "HomeOS.app"
-            BlueprintName = "HomeOS"
-            ReferencedContainer = "container:HomeOS.xcodeproj">
+            BlueprintIdentifier = "0B7B8E356A00A3B08554F64A"
+            BuildableName = "GatheredOS.app"
+            BlueprintName = "GatheredOS"
+            ReferencedContainer = "container:GatheredOS.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -58,10 +58,10 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1DE5B794BDCC70285F5B4604"
-               BuildableName = "HomeOSUITests.xctest"
-               BlueprintName = "HomeOSUITests"
-               ReferencedContainer = "container:HomeOS.xcodeproj">
+               BlueprintIdentifier = "BAAAEC968EEDF00D73D16346"
+               BuildableName = "GatheredOSUITests.xctest"
+               BlueprintName = "GatheredOSUITests"
+               ReferencedContainer = "container:GatheredOS.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -82,10 +82,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "44359CBF0E7EE205CBCC15CD"
-            BuildableName = "HomeOS.app"
-            BlueprintName = "HomeOS"
-            ReferencedContainer = "container:HomeOS.xcodeproj">
+            BlueprintIdentifier = "0B7B8E356A00A3B08554F64A"
+            BuildableName = "GatheredOS.app"
+            BlueprintName = "GatheredOS"
+            ReferencedContainer = "container:GatheredOS.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -101,10 +101,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "44359CBF0E7EE205CBCC15CD"
-            BuildableName = "HomeOS.app"
-            BlueprintName = "HomeOS"
-            ReferencedContainer = "container:HomeOS.xcodeproj">
+            BlueprintIdentifier = "0B7B8E356A00A3B08554F64A"
+            BuildableName = "GatheredOS.app"
+            BlueprintName = "GatheredOS"
+            ReferencedContainer = "container:GatheredOS.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

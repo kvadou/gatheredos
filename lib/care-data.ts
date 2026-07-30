@@ -20,7 +20,7 @@ import {
 import type { Database } from '@/lib/supabase/database.types'
 
 /* ---------------------------------------------------------------------------
-   Care data — the operational heart of HomeOS. The types + presentational maps
+   Care data — the operational heart of GatheredOS. The types + presentational maps
    here describe how Care *looks*; the adapters map raw Supabase rows into those
    types so components stay presentational. Icons, tints, and season labels are
    deliberately client-side (never in the DB) — data carries facts, not styling.
@@ -97,7 +97,7 @@ const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : und
 
 /* ----------------------------- Activity Feed ----------------------------- */
 
-/* A quiet, living signal that HomeOS is watching the house between visits.
+/* A quiet, living signal that GatheredOS is watching the house between visits.
    Small and calm — never noisy. */
 export type Activity = {
   id: string

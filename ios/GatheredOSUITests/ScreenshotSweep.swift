@@ -6,8 +6,8 @@ import XCTest
 //
 // Dev-only credentials for the seeded demo account (documented in repo docs).
 final class ScreenshotSweep: XCTestCase {
-    private let email = "dev@homeos.local"
-    private let password = "homeos-dev-2026!"
+    private let email = "dev@gatheredos.local"
+    private let password = "gatheredos-dev-2026!"
     private let tabs = ["Home", "Care", "Projects", "Library", "Ask"]
 
     override func setUp() {

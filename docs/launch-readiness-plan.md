@@ -14,7 +14,7 @@ engagement spam, or pricing copied from unrelated apps.
 **Category descriptor:** Home records, care, and intelligence
 
 GatheredOS is the selected customer-facing name across web, iOS, TestFlight,
-product copy, and current App Store metadata. `homeos` remains only as a legacy
+product copy, and current App Store metadata. `gatheredos` remains only as a legacy
 repository/project identifier where renaming would add migration risk without
 customer value. Public launch remains gated on professional trademark clearance
 and securing a domain, social handles, and support email.
@@ -39,7 +39,7 @@ complete care or make a decision.
 
 **Initial activation definition:** within seven days, a user creates a home,
 confirms at least three real items or records, and receives or acts on one useful
-HomeOS recommendation.
+GatheredOS recommendation.
 
 Supporting measures:
 

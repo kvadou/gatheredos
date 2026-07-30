@@ -1,4 +1,4 @@
-name: HomeOS
+name: GatheredOS
 options:
   bundleIdPrefix: com.homeos
   createIntermediateGroups: true
@@ -16,12 +16,12 @@ settings:
     DEVELOPMENT_TEAM: FM45AMFBNY
     CODE_SIGN_STYLE: Automatic
 targets:
-  HomeOS:
+  GatheredOS:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
     sources:
-      - path: HomeOS
+      - path: GatheredOS
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dougkvamme.homeos
@@ -41,32 +41,32 @@ targets:
       - package: Supabase
         product: Supabase
   # UI test bundle — the iOS pw-verify equivalent (headless screenshot sweep).
-  HomeOSUITests:
+  GatheredOSUITests:
     type: bundle.ui-testing
     platform: iOS
     deploymentTarget: "17.0"
     sources:
-      - path: HomeOSUITests
+      - path: GatheredOSUITests
     dependencies:
-      - target: HomeOS
+      - target: GatheredOS
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dougkvamme.homeos.uitests
         GENERATE_INFOPLIST_FILE: "YES"
-        TEST_TARGET_NAME: HomeOS
+        TEST_TARGET_NAME: GatheredOS
         TARGETED_DEVICE_FAMILY: "1,2"
 # shared scheme — required by Xcode Cloud (headless CI never auto-creates schemes)
 schemes:
-  HomeOS:
+  GatheredOS:
     build:
       targets:
-        HomeOS: all
-        HomeOSUITests: [test]
+        GatheredOS: all
+        GatheredOSUITests: [test]
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - HomeOSUITests
+        - GatheredOSUITests
     archive:
       config: Release

@@ -1,6 +1,6 @@
 import { Sparkles, ArrowRight } from 'lucide-react'
 
-export function HomeOSInsight() {
+export function GatheredOSInsight() {
   return (
     <section className="flex h-full flex-col rounded-3xl border border-border/70 bg-card p-6 shadow-sm sm:p-7">
       <div className="flex items-center gap-2">

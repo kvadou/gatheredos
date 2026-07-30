@@ -2,7 +2,7 @@ import { Activity as ActivityIcon } from 'lucide-react'
 import { type Activity } from '@/lib/care-data'
 import { cn } from '@/lib/utils'
 
-/* A quiet ticker of what HomeOS has done on its own since the last visit.
+/* A quiet ticker of what GatheredOS has done on its own since the last visit.
    Deliberately understated so the home feels alive without nagging. */
 export function CareActivity({ activity }: { activity: Activity[] }) {
   return (

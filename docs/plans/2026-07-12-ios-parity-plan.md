@@ -1,6 +1,6 @@
 # iOS App — Native Design Review + Web Parity Plan
 
-**Date:** 2026-07-12. **Scope:** `ios/HomeOS` (SwiftUI, 855 lines, 9 files) reviewed against Apple HIG via native-ios-design checklist; feature gap mapped against the live web app.
+**Date:** 2026-07-12. **Scope:** `ios/GatheredOS` (SwiftUI, 855 lines, 9 files) reviewed against Apple HIG via native-ios-design checklist; feature gap mapped against the live web app.
 
 ## Design review verdict: solid native v1, no hard-rule violations
 
@@ -28,7 +28,7 @@ Polish items (small, do during parity work):
 | Care | count only | task list, complete/snooze, seasonal, service history, health score |
 | Projects | none | active/idea/recommended/completed, progress, budget |
 | Library | items list + add/delete | rooms, files/photos, upload, search, edit |
-| Ask HomeOS | none | streaming chat |
+| Ask GatheredOS | none | streaming chat |
 | Worth Knowing | none | insights feed + dismiss |
 | Settings | sign-out button only | profile, home, family members |
 | Onboarding | none | required for iOS-first signups |

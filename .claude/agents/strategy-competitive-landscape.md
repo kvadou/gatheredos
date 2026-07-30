@@ -1,6 +1,6 @@
 ---
 name: strategy-competitive-landscape
-description: "Bain-level competitive intelligence analysis for HomeOS. Use when you need competitor analysis, market positioning, or white space identification."
+description: "Bain-level competitive intelligence analysis for GatheredOS. Use when you need competitor analysis, market positioning, or white space identification."
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
 model: inherit
 ---
@@ -37,7 +37,7 @@ For each of these known competitors (Amazon Alexa, Google Home, Apple HomeKit, H
 ### Market Positioning Map
 - Map competitors on price vs. value matrix
 - Identify positioning clusters and outliers
-- Show where HomeOS sits (or should sit)
+- Show where GatheredOS sits (or should sit)
 
 ### Competitive Moats
 For each major player, assess:

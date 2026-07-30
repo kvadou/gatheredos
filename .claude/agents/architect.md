@@ -19,6 +19,6 @@ System design, API contracts, cross-feature coordination, and data flow planning
 ## Conventions
 - All API responses use `{ success: boolean, data?, error? }` format
 - All routes require `requireAuth()` as first call
-- Validate all inputs with Zod schemas from `@homeos/shared`
+- Validate all inputs with Zod schemas from `@gatheredos/shared`
 - Verify home ownership before any data access: `home.users.some({ userId: user.id })`
 - Use Prisma includes/selects intentionally — don't over-fetch

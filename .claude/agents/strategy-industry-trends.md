@@ -39,7 +39,7 @@ From the last 12 months in Smart Home / Property Management / AI Assistance:
 ### Technology Disruptions
 - What new technologies are changing Smart Home / Property Management / AI Assistance
 - Adoption timeline: early adopter → early majority → mainstream
-- Impact on HomeOS specifically
+- Impact on GatheredOS specifically
 - Technologies to invest in vs. wait on
 
 ### Regulatory Shifts
@@ -68,7 +68,7 @@ For each trend:
 
 ### "So What" Analysis
 For each trend, specifically articulate:
-- What this means for HomeOS
+- What this means for GatheredOS
 - Whether it's an opportunity or threat (or both)
 - Recommended strategic response
 - Impact rating (1-10)
@@ -89,7 +89,7 @@ Structure as a trend intelligence brief:
 - Micro trends deep dive (pattern, evidence, implication)
 - Technology disruption radar (text-based visualization)
 - Investment signal summary
-- "So What" action items for HomeOS (prioritized)
+- "So What" action items for GatheredOS (prioritized)
 
 ## Escalation Rules
 

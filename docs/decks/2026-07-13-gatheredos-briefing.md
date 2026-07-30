@@ -7,16 +7,16 @@ paginate: true
 <!-- _class: title -->
 <!-- _footer: "Doug Kvamme · 7/13/26" -->
 
-# HomeOS
+# GatheredOS
 ## The memory your home never had — full briefing, 7/13/26
 
 ---
 
-# What HomeOS is
+# What GatheredOS is
 
 Upload anything about your house — receipts, manuals, warranties, inspection reports, photos.
 
-HomeOS reads them, remembers everything, schedules the upkeep, and answers questions **about your specific home** — with receipts to prove it.
+GatheredOS reads them, remembers everything, schedules the upkeep, and answers questions **about your specific home** — with receipts to prove it.
 
 Live today: **gatherroot.vercel.app** + iPhone app (TestFlight).
 
@@ -152,7 +152,7 @@ Works for receipts, manuals, warranties, inspection reports, and photos of data 
 
 **The Recent Buyer** — closed within 18 months, inherited a house with zero documentation and a 40-page inspection report.
 
-Their inspection report is the perfect first upload — HomeOS already turns it into a task list.
+Their inspection report is the perfect first upload — GatheredOS already turns it into a task list.
 
 Second wave: DIY maintainers — spreadsheet keepers, repair-YouTube watchers.
 
@@ -163,7 +163,7 @@ Second wave: DIY maintainers — spreadsheet keepers, repair-YouTube watchers.
 - **Reddit first** — value-first answers in homeowner subs, 20-spot beta ask. $0, 30 min/day
 - Build-in-public on X
 - SEO pages generated from our own maintenance data
-- Realtor closing-gift channel — "gift HomeOS pre-loaded with the inspection report"
+- Realtor closing-gift channel — "gift GatheredOS pre-loaded with the inspection report"
 - Product Hunt only after retention proves out
 
 ---

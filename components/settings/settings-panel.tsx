@@ -42,7 +42,7 @@ import {
 } from '@/lib/actions/invites'
 import type { NotificationPreferences } from '@/lib/notifications'
 
-/* Settings as a HomeOS control panel: a summary hero over real home data, then
+/* Settings as a GatheredOS control panel: a summary hero over real home data, then
    grouped lists for Home Profile, My Homes, and Family. */
 
 type HomeRow = Database['public']['Tables']['homes']['Row']
@@ -142,7 +142,7 @@ export function SettingsPanel({
         </p>
       </header>
 
-      {/* Summary hero — makes Settings feel like part of HomeOS, not a SaaS form */}
+      {/* Summary hero — makes Settings feel like part of GatheredOS, not a SaaS form */}
       <section className="overflow-hidden rounded-3xl border border-border/70 bg-card shadow-sm">
         <div className="flex items-center gap-3 border-b border-border/60 bg-sage/[0.06] px-5 py-4">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sage/20 text-sage-foreground">

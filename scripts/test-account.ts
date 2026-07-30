@@ -36,7 +36,7 @@ function loadEnvFile(path: string): Record<string, string> {
 Object.assign(process.env, loadEnvFile('.env'), loadEnvFile('.env.local'))
 
 const PASSWORD = 'trust-test-pw-8x24!'
-const EMAIL_RE = /^trust-test-.*@homeos\.local$/
+const EMAIL_RE = /^trust-test-.*@gatheredos\.local$/
 
 async function main() {
   const { createAdminClient } = await import('../lib/supabase/admin')
@@ -59,7 +59,7 @@ async function main() {
   }
 
   const createUser = async (tag: string) => {
-    const email = `trust-test-${tag}-${Date.now()}@homeos.local`
+    const email = `trust-test-${tag}-${Date.now()}@gatheredos.local`
     const { data, error } = await db.auth.admin.createUser({
       email,
       password: PASSWORD,

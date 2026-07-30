@@ -23,4 +23,4 @@ Build React/Next.js pages, components, client-side state, and user interactions.
 - Design system: Navy (#0A2E4D) primary, Teal (#00B4A0) accent
 - Icons from `lucide-react`
 - Forms: controlled inputs, local state, fetch to API routes
-- Use `@homeos/shared` constants for dropdown options
+- Use `@gatheredos/shared` constants for dropdown options

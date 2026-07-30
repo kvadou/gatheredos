@@ -51,7 +51,7 @@ export async function GET(req: Request) {
   return new Response(JSON.stringify(doc, null, 2), {
     headers: {
       'Content-Type': 'application/json',
-      'Content-Disposition': `attachment; filename="homeos-export-${date}.json"`,
+      'Content-Disposition': `attachment; filename="gatheredos-export-${date}.json"`,
     },
   })
 }

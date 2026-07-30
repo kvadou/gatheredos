@@ -1,8 +1,8 @@
-# HomeOS Reasoning Engine Playbook
+# GatheredOS Reasoning Engine Playbook
 
 **Roadmap ref:** Claude Prompt #3 (Build the AI Playbook). **Status:** product spec for Phase 2 answer generation. **Date:** 2026-07-12.
 
-This is the spec for how "Ask HomeOS" reasons over a home's records to answer real homeowner questions with grounded, cited answers. It defines the universal answer pipeline, 12 reasoning archetypes worked end to end, 100 realistic questions mapped to objects and data needs, and a gap analysis that turns into build priority.
+This is the spec for how "Ask GatheredOS" reasons over a home's records to answer real homeowner questions with grounded, cited answers. It defines the universal answer pipeline, 12 reasoning archetypes worked end to end, 100 realistic questions mapped to objects and data needs, and a gap analysis that turns into build priority.
 
 Today's Ask route (`app/api/ask/route.ts`) blind-dumps five tables (items, care_tasks, care_events, projects, insights) into the system prompt and streams prose with inline name-drops but no machine-resolvable citations, no intent routing, no retrieval, and no confidence tiers. This playbook is the target that route evolves toward.
 

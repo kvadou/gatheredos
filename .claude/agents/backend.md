@@ -23,4 +23,4 @@ Build API routes, server actions, service logic, and data access patterns.
 - Verify home ownership: `home.users.some({ userId: user.id })`
 - For dynamic routes: `params: Promise<{ id: string }>`, await params
 - Catch blocks return appropriate HTTP status codes (401, 400, 404, 500)
-- Import Prisma from `@/lib/db`, auth from `@/lib/auth`, validators from `@homeos/shared`
+- Import Prisma from `@/lib/db`, auth from `@/lib/auth`, validators from `@gatheredos/shared`
