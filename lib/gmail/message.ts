@@ -46,6 +46,12 @@ function decode(data: string | undefined): string {
 /**
  * Readable body text. Prefers text/plain; falls back to stripping tags off
  * text/html, which is what the field-service platforms actually send.
+ *
+ * SECURITY: entity decoding deliberately does NOT restore `<` and `>`. An
+ * attacker who writes `&lt;/untrusted_email&gt;` in an HTML body would
+ * otherwise get a literal closing tag through tag-stripping and could break
+ * out of the prompt fence downstream. Angle brackets are decoded to their
+ * fullwidth lookalikes: still readable to a model, inert as markup.
  */
 export function bodyText(msg: GmailMessage): string {
   let plain = ''
@@ -60,13 +66,19 @@ export function bodyText(msg: GmailMessage): string {
     .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/(p|div|tr|h[1-6])>/gi, '\n')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
+    .replace(/&lt;/gi, '＜')
+    .replace(/&gt;/gi, '＞')
+    .replace(/&#0*60;?/g, '＜')
+    .replace(/&#0*62;?/g, '＞')
+    .replace(/&#x0*3c;?/gi, '＜')
+    .replace(/&#x0*3e;?/gi, '＞')
     .replace(/&#39;|&apos;/gi, "'")
     .replace(/&quot;/gi, '"')
+    // &amp; last: decoding it earlier would let &amp;lt; become &lt; and then <.
+    .replace(/&amp;/gi, '&')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim()

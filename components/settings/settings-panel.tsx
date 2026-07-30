@@ -27,13 +27,15 @@ import {
   Printer,
   Bell,
   BadgeDollarSign,
+  History as HistoryIcon,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/database.types'
 import { updateHome, removeMember, updateProfileName, updateNotificationPreferences } from '@/lib/actions/settings'
 import { deleteAccount } from '@/lib/actions/account'
-import { disconnectGmail } from '@/lib/actions/gmail'
+import { disconnectGmail, syncContractorEmailNow } from '@/lib/actions/gmail'
 import {
   createInvite,
   revokeInvite,
@@ -217,6 +219,7 @@ export function SettingsPanel({
               </a>
             )}
           </div>
+          {gmail.connected && <ContractorImportRow />}
         </Group>
 
         {/* -------------------- Home Profile -------------------- */}
@@ -483,6 +486,121 @@ function PendingInviteRow({ invite }: { invite: PendingInvite }) {
       >
         <Trash2 className="size-4" strokeWidth={2} />
       </button>
+    </div>
+  )
+}
+
+/* Import service history from contractor mail. Each call processes one small
+   batch and reports whether more is waiting, so the loop lives here and the
+   user watches a running count instead of staring at one long request. */
+const MAX_ROUNDS = 20
+
+function ContractorImportRow() {
+  const router = useRouter()
+  const [running, setRunning] = useState(false)
+  const [totals, setTotals] = useState<{ imported: number; skipped: number; failed: number } | null>(null)
+  const [contractors, setContractors] = useState<string[]>([])
+  const [remaining, setRemaining] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function run() {
+    setRunning(true)
+    setError(null)
+    setTotals({ imported: 0, skipped: 0, failed: 0 })
+    setContractors([])
+    setRemaining(false)
+
+    const found: string[] = []
+    let imported = 0
+    let skipped = 0
+    let failed = 0
+    let more = false
+
+    for (let round = 0; round < MAX_ROUNDS; round += 1) {
+      const result = await syncContractorEmailNow()
+      if (!result.success) {
+        setError(result.error)
+        break
+      }
+      imported += result.imported
+      failed += result.failed
+      // skipped counts already-imported mail, which repeats every round —
+      // report the latest view rather than a growing sum.
+      skipped = result.skipped
+      for (const name of result.contractors) if (!found.includes(name)) found.push(name)
+      setTotals({ imported, skipped, failed })
+      setContractors([...found])
+      more = result.truncated
+      if (!more) break
+      if (round === MAX_ROUNDS - 1) setRemaining(true)
+    }
+    if (more) setRemaining(true)
+    setRunning(false)
+    router.refresh()
+  }
+
+  const done = !running && totals !== null && !error
+
+  return (
+    <div className="border-t border-border/60 px-4 py-3.5">
+      <div className="flex items-center gap-3.5">
+        <RowIcon Icon={HistoryIcon} />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium">Import service history</span>
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            Find every contractor who has worked on your home from appointment and invoice email
+          </span>
+        </span>
+        <button
+          onClick={run}
+          type="button"
+          disabled={running}
+          className="shrink-0 rounded-xl bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {running ? 'Reading…' : done ? 'Run again' : 'Import'}
+        </button>
+      </div>
+
+      {(running || totals) && !error && (
+        <div className="mt-3 pl-11">
+          <p className="text-xs text-muted-foreground" aria-live="polite">
+            {totals?.imported ?? 0} imported
+            {(totals?.skipped ?? 0) > 0 && ` · ${totals?.skipped} already on file`}
+            {(totals?.failed ?? 0) > 0 && ` · ${totals?.failed} could not be read`}
+            {running && ' · still reading'}
+          </p>
+          {contractors.length > 0 && (
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {contractors.map((name) => (
+                <li
+                  key={name}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-secondary/40 px-2.5 py-1 text-xs"
+                >
+                  <Wrench className="size-3.5 text-muted-foreground" strokeWidth={2} />
+                  <span className="font-medium">{name}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {done && contractors.length === 0 && (totals?.imported ?? 0) === 0 && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              No contractor email found in the last five years. New appointments will import as they arrive.
+            </p>
+          )}
+          {remaining && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              More mail is waiting. Run it again to keep going.
+            </p>
+          )}
+          {done && (totals?.imported ?? 0) > 0 && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              New contractors are waiting for your confirmation on the dashboard.
+            </p>
+          )}
+        </div>
+      )}
+
+      {error && <p className="mt-3 pl-11 text-xs text-destructive">{error}</p>}
     </div>
   )
 }

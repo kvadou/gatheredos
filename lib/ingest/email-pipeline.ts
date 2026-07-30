@@ -6,7 +6,7 @@ import {
   header, ingestableAttachments, senderEmail, senderName, type GmailMessage,
 } from '@/lib/gmail/message'
 import { applyCascade, ingestFile } from '@/lib/ingest/pipeline'
-import { extractEmail, gmailQuery, vendorFor } from '@/lib/ingest/email'
+import { extractEmail, gmailQuery, vendorFor, wideQuery } from '@/lib/ingest/email'
 import type { Database } from '@/lib/supabase/database.types'
 
 /**
@@ -22,8 +22,13 @@ import type { Database } from '@/lib/supabase/database.types'
 type Admin = ReturnType<typeof createAdminClient>
 type HomeRow = Database['public']['Tables']['homes']['Row']
 
-/** Cap per run: one Claude call per message, so the ceiling is the cost ceiling. */
-const DEFAULT_LIMIT = 40
+/**
+ * Caps per run: one Claude call per un-imported message, so these are the cost
+ * ceiling. Platform mail is high-signal and gets the bigger budget; the wide
+ * pass is speculative, so it gets less.
+ */
+const PLATFORM_LIMIT = 40
+const WIDE_LIMIT = 25
 
 export type SyncResult = {
   scanned: number
@@ -31,6 +36,10 @@ export type SyncResult = {
   skipped: number
   failed: number
   attachments: number
+  /** Distinct contractors the run recorded or queued. */
+  contractors: string[]
+  /** More un-imported mail is waiting — call again to continue. */
+  truncated: boolean
 }
 
 export async function syncContractorEmail(input: {
@@ -38,10 +47,18 @@ export async function syncContractorEmail(input: {
   home: HomeRow
   limit?: number
   withinYears?: number
+  /** Also scan for contractors with no field-service platform. Default true. */
+  wide?: boolean
+  /** Process at most this many new messages, so one call fits one request. */
+  batchSize?: number
 }): Promise<SyncResult> {
   const db = createAdminClient()
-  const limit = input.limit ?? DEFAULT_LIMIT
-  const result: SyncResult = { scanned: 0, imported: 0, skipped: 0, failed: 0, attachments: 0 }
+  const platformLimit = input.limit ?? PLATFORM_LIMIT
+  const wideLimit = input.wide === false ? 0 : Math.min(WIDE_LIMIT, input.limit ?? WIDE_LIMIT)
+  const result: SyncResult = {
+    scanned: 0, imported: 0, skipped: 0, failed: 0, attachments: 0,
+    contractors: [], truncated: false,
+  }
 
   const { data: connection } = await db
     .from('external_connections' as never)
@@ -53,29 +70,43 @@ export async function syncContractorEmail(input: {
   if (!connection) throw new Error('no active gmail connection')
 
   const accessToken = await accessTokenFrom(decryptToken(connection.refresh_token_ciphertext))
-  const ids = await listMessageIds(accessToken, gmailQuery(input.withinYears ?? 5), limit)
-  result.scanned = ids.length
+  const years = input.withinYears ?? 5
 
-  // Layer-1 dedupe: skip anything this home already processed, before any
+  const platformIds = await listMessageIds(accessToken, gmailQuery(years), platformLimit)
+  const wideIds = wideLimit > 0
+    ? await listMessageIds(accessToken, wideQuery(years), wideLimit)
+    : []
+  // Platform mail first: it is the highest-signal source, so it never loses
+  // budget to speculative matches.
+  const candidates = [...new Set([...platformIds, ...wideIds])]
+  result.scanned = candidates.length
+
+  // Layer-1 dedupe: drop anything this home already processed, before any
   // Gmail fetch or Claude call.
   const { data: seen } = await db
     .from('imported_messages' as never)
     .select('external_id')
     .eq('home_id', input.home.id)
-    .in('external_id', ids)
+    .in('external_id', candidates)
     .in('status', ['done', 'skipped']) as { data: { external_id: string }[] | null }
   const done = new Set((seen ?? []).map((row) => row.external_id))
+  const pending = candidates.filter((id) => !done.has(id))
+  result.skipped = candidates.length - pending.length
 
-  for (const id of ids) {
-    if (done.has(id)) {
-      result.skipped += 1
-      continue
-    }
+  // One batch per call: an interactive sync must finish inside a single server
+  // invocation, so the caller loops while `truncated` is true.
+  const batch = input.batchSize ? pending.slice(0, input.batchSize) : pending
+  result.truncated = batch.length < pending.length
+
+  for (const id of batch) {
     try {
       const outcome = await ingestMessage(db, accessToken, input.userId, input.home, id)
       if (outcome.status === 'done') result.imported += 1
       else result.skipped += 1
       result.attachments += outcome.attachments
+      if (outcome.company && !result.contractors.includes(outcome.company)) {
+        result.contractors.push(outcome.company)
+      }
     } catch (err) {
       result.failed += 1
       console.error(`[email-ingest] message ${id} failed:`, err)
@@ -98,7 +129,7 @@ async function ingestMessage(
   userId: string,
   home: HomeRow,
   messageId: string,
-): Promise<{ status: 'done' | 'skipped'; attachments: number }> {
+): Promise<{ status: 'done' | 'skipped'; attachments: number; company: string | null }> {
   const msg = await getMessage(accessToken, messageId)
   const from = header(msg, 'from')
   const fromEmail = senderEmail(from)
@@ -152,7 +183,7 @@ async function ingestMessage(
       extraction_id: extraction.id,
       service_address: extract.service_address?.slice(0, 300) ?? null,
     })
-    return { status: 'skipped', attachments: 0 }
+    return { status: 'skipped', attachments: 0, company: null }
   }
 
   await applyCascade(
@@ -178,7 +209,7 @@ async function ingestMessage(
     attachment_file_ids: fileIds,
     service_address: extract.service_address?.slice(0, 300) ?? null,
   })
-  return { status: 'done', attachments: fileIds.length }
+  return { status: 'done', attachments: fileIds.length, company: extract.company?.trim() || null }
 }
 
 async function upsertLog(db: Admin, row: Record<string, unknown>): Promise<void> {
@@ -215,11 +246,15 @@ async function fileAttachments(
       continue
     }
 
-    const safeName = att.filename.replace(/[^\w.\-]+/g, '_').slice(0, 120)
+    // Attacker-controlled filename. Collapse to word chars, then strip any
+    // remaining dot run so `..` can never appear in the object key, and fall
+    // back to a fixed name when nothing usable survives.
+    const safeName = (att.filename.replace(/[^\w.\-]+/g, '_').replace(/\.{2,}/g, '.').replace(/^\.+/, '') || 'attachment')
+      .slice(0, 120)
     const path = `${homeId}/email/${msg.id}/${safeName}`
     const { error: upErr } = await db.storage
       .from('home-files')
-      .upload(path, bytes, { contentType: att.mimeType, upsert: true })
+      .upload(path, bytes, { contentType: att.mimeType, upsert: false })
     if (upErr) {
       console.error(`[email-ingest] attachment upload failed (${path}):`, upErr)
       continue

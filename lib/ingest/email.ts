@@ -43,6 +43,31 @@ export function gmailQuery(withinYears = 5): string {
   return `(${domains}) newer_than:${withinYears}y`
 }
 
+/**
+ * Second pass for contractors with no platform software — the small local shop
+ * that emails from Gmail. Gmail's own search does the prefiltering for free, so
+ * Claude only ever sees plausible candidates.
+ */
+const TRADE_TERMS = [
+  'plumbing', 'plumber', 'electric', 'electrician', 'hvac', 'furnace', 'air conditioning',
+  'roofing', 'roofer', 'water heater', 'gutter', 'septic', 'garage door', 'appliance repair',
+  'chimney', 'pest control', 'lawn care', 'irrigation', 'sump pump', 'duct cleaning',
+  'drain', 'well pump', 'softener', 'insulation', 'siding', 'window replacement',
+]
+const RECORD_TERMS = [
+  '"appointment confirmation"', '"service call"', '"work order"', 'invoice', 'estimate',
+  'technician', '"scheduled for"', '"on the way"', '"service completed"', 'receipt',
+]
+
+export function wideQuery(withinYears = 5): string {
+  const trades = TRADE_TERMS.map((t) => `"${t}"`).join(' OR ')
+  const records = RECORD_TERMS.join(' OR ')
+  const platforms = Object.keys(VENDOR_DOMAINS).map((d) => `-from:${d}`).join(' ')
+  // Exclude the platforms the first pass already covered, and the obvious
+  // non-contractor senders that dominate any real inbox.
+  return `(${trades}) (${records}) ${platforms} -from:linkedin.com -from:indeed.com -in:spam -in:trash newer_than:${withinYears}y`
+}
+
 /** Platform behind a sender address, or null when it is not one we ingest. */
 export function vendorFor(fromEmail: string): string | null {
   const domain = fromEmail.split('@')[1]?.toLowerCase() ?? ''
@@ -104,9 +129,19 @@ const JSON_SHAPE = `{
   "summary": "one short human line for a review card, e.g. Electrical service call from Lebrun Electric, Jan 3 2023" | null
 }`
 
-/** Control chars out, length capped — this text is hostile input by default. */
+/**
+ * Control chars out, fence tokens neutralized, length capped. This text is
+ * hostile input by default: a text/plain body can contain a literal
+ * `</untrusted_email>` and break out of the prompt fence, so the tag
+ * delimiters are rewritten to fullwidth lookalikes that close nothing.
+ */
+const FENCE_TAG = /<(\/?)\s*untrusted_email\s*>/gi
+
 function sanitize(value: string, max: number): string {
-  return value.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, max)
+  return value
+    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replace(FENCE_TAG, (_m, slash: string) => `＜${slash}untrusted_email＞`)
+    .slice(0, max)
 }
 
 /** The envelope the shared cascade consumes, plus the email-only fields the import log records. */
