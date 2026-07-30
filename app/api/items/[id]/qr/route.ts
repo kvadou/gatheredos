@@ -12,7 +12,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const { data: item } = await supabase.from('items').select('id').eq('id', id).eq('home_id', home.id).maybeSingle()
   if (!item) return new Response('Not found', { status: 404 })
 
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gatherroot.vercel.app'
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gatheredos.com'
   const svg = await QRCode.toString(`${site}/library/item/${item.id}`, {
     type: 'svg', errorCorrectionLevel: 'H', margin: 2,
     color: { dark: '#0A2E4D', light: '#FFFFFF' }, width: 512,

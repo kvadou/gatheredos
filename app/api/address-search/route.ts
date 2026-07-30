@@ -96,7 +96,7 @@ async function fetchPhoton(q: string): Promise<AddressSuggestion[]> {
     `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&lang=en`,
     {
       signal: AbortSignal.timeout(4000),
-      headers: { 'User-Agent': 'GatheredOS/1.0 (temporary deployment: gatherroot.vercel.app)' },
+      headers: { 'User-Agent': 'GatheredOS/1.0 (gatheredos.com)' },
     },
   )
   if (!res.ok) throw new Error(`photon ${res.status}`)

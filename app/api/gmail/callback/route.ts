@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { logUsage } from '@/lib/usage'
 import { encryptToken, exchangeCode, googleEmail } from '@/lib/gmail/oauth'
 
-const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gatherroot.vercel.app'
+const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gatheredos.com'
 
 export async function GET(req: Request) {
   const { user } = await requireUser()

@@ -6,7 +6,7 @@ import { authorizationUrl, gmailConfigured } from '@/lib/gmail/oauth'
 
 export async function GET() {
   await requireUser()
-  if (!gmailConfigured()) return Response.redirect(new URL('/settings?gmail=unavailable', process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gatherroot.vercel.app'))
+  if (!gmailConfigured()) return Response.redirect(new URL('/settings?gmail=unavailable', process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gatheredos.com'))
   await logUsage('gmail_connect_started')
   const state = randomBytes(32).toString('base64url')
   const jar = await cookies()
