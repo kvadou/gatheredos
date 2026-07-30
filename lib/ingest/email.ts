@@ -65,7 +65,13 @@ export function wideQuery(withinYears = 5): string {
   const platforms = Object.keys(VENDOR_DOMAINS).map((d) => `-from:${d}`).join(' ')
   // Exclude the platforms the first pass already covered, and the obvious
   // non-contractor senders that dominate any real inbox.
-  return `(${trades}) (${records}) ${platforms} -from:linkedin.com -from:indeed.com -in:spam -in:trash newer_than:${withinYears}y`
+  // -category: exclusions are the highest-leverage filter here: newsletters and
+  // promotional blasts are what a bare trade-term match actually returns, and
+  // every one of them would otherwise cost a Claude call to reject.
+  return `(${trades}) (${records}) ${platforms}`
+    + ' -category:promotions -category:social -category:forums'
+    + ' -from:linkedin.com -from:indeed.com -in:spam -in:trash'
+    + ` newer_than:${withinYears}y`
 }
 
 /** Platform behind a sender address, or null when it is not one we ingest. */
@@ -90,6 +96,13 @@ const FACT_CATEGORIES = new Set(['spec', 'history', 'location', 'preference', 'f
 
 /** Kinds that describe a real visit worth remembering. */
 const VISIT_KINDS = new Set<EmailKind>(['appointment', 'reminder', 'en_route', 'invoice', 'receipt'])
+
+/**
+ * An estimate is not a visit, but it IS a contractor who engaged with this
+ * home — which is exactly what "who has worked on my house" needs. It records
+ * the contractor and any durable facts, never a care_event (no work happened).
+ */
+const CONTACT_KINDS = new Set<EmailKind>(['estimate'])
 
 export type EmailExtract = {
   kind: EmailKind
@@ -190,7 +203,12 @@ ${JSON_SHAPE}`,
   if (!block || block.type !== 'text') throw new Error('email extraction returned no text block')
   const data = normalize(parseJson(block.text))
 
-  const inScope = data.is_home_service && VISIT_KINDS.has(data.kind)
+  const isVisit = VISIT_KINDS.has(data.kind)
+  const isContact = CONTACT_KINDS.has(data.kind)
+  const inScope = data.is_home_service && (isVisit || isContact)
+  const skipReason = !data.is_home_service
+    ? `${data.kind} email, not about work at this home`
+    : `${data.kind} email, nothing to record`
   return {
     vendor,
     extract: data,
@@ -200,7 +218,7 @@ ${JSON_SHAPE}`,
       confidence: data.confidence,
       model: MODEL,
       scopeStatus: inScope ? 'in_scope' : 'out_of_scope',
-      scopeReason: inScope ? null : `${data.kind} email, not a record of work performed`,
+      scopeReason: inScope ? null : skipReason,
       proposals: inScope ? await buildProposals(db, msg, home, data) : [],
     },
   }
@@ -295,6 +313,21 @@ async function buildProposals(
       confidence: conf,
       summary: `Add ${company} to your contractors?`,
     })
+  }
+
+  // An estimate records who quoted the work, not that work happened.
+  if (CONTACT_KINDS.has(d.kind)) {
+    for (const [index, fact] of (d.facts ?? []).entries()) {
+      proposals.push({
+        target: 'home_facts',
+        action: 'insert',
+        payload: { statement: fact.statement, category: fact.category ?? 'history', subject_table: itemId ? 'items' : null, subject_id: itemId },
+        dedupeKey: `${key}:fact:${index}`,
+        confidence: Math.min(conf, fact.confidence ?? conf),
+        summary: fact.statement,
+      })
+    }
+    return proposals
   }
 
   if (isFuture(d.scheduled_start)) {

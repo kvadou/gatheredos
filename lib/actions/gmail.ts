@@ -38,7 +38,7 @@ export async function syncContractorEmailNow() {
     const { syncContractorEmail } = await import('@/lib/ingest/email-pipeline')
     // One batch per request: each message costs a Gmail fetch plus a Claude
     // call, and the client loops while `truncated` comes back true.
-    const result = await syncContractorEmail({ userId: user.id, home, batchSize: 6 })
+    const result = await syncContractorEmail({ userId: user.id, home, batchSize: 6, withinYears: 10 })
     await logUsage('contractor_email_synced', { ...result }, home.id)
     revalidatePath('/care')
     revalidatePath('/library')

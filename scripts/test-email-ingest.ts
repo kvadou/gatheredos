@@ -165,6 +165,23 @@ const ENTITY_ESCAPE: GmailMessage = {
   },
 }
 
+/** A contractor quoting work at the home — records the contractor, not a visit. */
+const ESTIMATE = message({
+  id: 'fixture-estimate-1',
+  from: 'Otsego Gutter Co <office@otsegogutter.com>',
+  subject: '7263 Little Ave NE, Otsego',
+  sentAt: '2026-05-12T10:00:00-05:00',
+  body: `Hi Doug,
+
+Attached is our estimate for gutter replacement at 7263 Little Ave NE, Otsego, MN.
+
+Scope: remove existing 5" aluminum gutters, install 6" seamless with leaf guards.
+Estimated total: $3,450. Quote good for 30 days.
+
+Thanks,
+Otsego Gutter Co`,
+})
+
 async function scratchHome() {
   const { data: profile } = await db.from('profiles').select('id').limit(1).maybeSingle()
   if (!profile) throw new Error('no profile in the database — run scripts/seed.ts first')
@@ -266,6 +283,15 @@ async function main() {
     check('entity: did not hijack company', !entText.includes('ENTITY ESCAPE'), ent.extract.company)
     check('entity: no fabricated amount', ent.extract.amount !== 88888, ent.extract.amount)
     check('entity: no BREACHED payload', !entText.includes('BREACHED'), ent.extract.summary)
+
+    // 4c. Estimates: the contractor is recorded, but no work is claimed.
+    const est = await run(ESTIMATE)
+    check('estimate: kept in scope', est.envelope.scopeStatus === 'in_scope', est.envelope.scopeStatus)
+    check('estimate: company extracted', est.extract.company?.includes('Otsego Gutter') === true, est.extract.company)
+    check('estimate: proposed a contractor',
+      est.envelope.proposals.some((p) => p.target === 'contractors'), est.envelope.proposals.map((p) => p.target))
+    check('estimate: did NOT claim work happened',
+      !est.envelope.proposals.some((p) => p.target === 'care_events'), est.envelope.proposals.map((p) => p.target))
 
     // 5. Re-run the same message → no duplicate rows.
     const before = await db.from('care_events').select('id', { count: 'exact', head: true }).eq('home_id', home.id)
