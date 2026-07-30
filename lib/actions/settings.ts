@@ -27,7 +27,7 @@ export async function switchHome(homeId: string) {
   const { data: home } = await supabase.from('homes').select('id').eq('id', homeId).maybeSingle()
   if (!home) return
   const jar = await cookies()
-  jar.set('gatheredos_current_home', home.id, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 24 * 365 })
+  jar.set('homeos_current_home', home.id, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 24 * 365 })
   revalidatePath('/', 'layout')
   redirect('/')
 }

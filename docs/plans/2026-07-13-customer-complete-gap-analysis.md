@@ -71,7 +71,7 @@ Rough shape: 1–2 focused sessions per phase at today's cadence.
 
 ## 5. Blocked on Doug (accounts/decisions only he can make)
 
-- Domain purchase (+ pick the name story: getgatheredos.com?) → DNS for Resend sender + universal links
+- Domain purchase (+ pick the name story: gethomeos.com?) → DNS for Resend sender + universal links
 - Resend account; Stripe account; RentCast + Mapbox keys (already queued from tonight)
 - Apple: App Store listing assets, privacy labels sign-off
 - Legal: review generated ToS/privacy before publishing

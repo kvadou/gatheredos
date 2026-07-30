@@ -28,7 +28,7 @@ export async function requireUser() {
  */
 export async function getCurrentHome(): Promise<HomeRow | null> {
   const { supabase } = await requireUser()
-  const selected = (await cookies()).get('gatheredos_current_home')?.value
+  const selected = (await cookies()).get('homeos_current_home')?.value
   if (selected) {
     const { data } = await supabase.from('homes').select('*').eq('id', selected).maybeSingle()
     if (data) return data
