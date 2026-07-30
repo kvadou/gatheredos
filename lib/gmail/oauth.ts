@@ -14,6 +14,12 @@ function config() {
 
 export function gmailConfigured(): boolean { return config() !== null }
 
+/** Client id/secret for flows outside this module (refresh-token exchange). */
+export function gmailClientCredentials(): { clientId: string; clientSecret: string } | null {
+  const c = config()
+  return c ? { clientId: c.clientId, clientSecret: c.clientSecret } : null
+}
+
 export function authorizationUrl(state: string): string {
   const c = config()
   if (!c) throw new Error('Gmail is not configured')

@@ -13,7 +13,8 @@
     "test:scan": "pnpm dlx tsx scripts/test-scan-reliability.ts",
     "test:catalog": "pnpm exec tsx scripts/test-catalog.ts",
     "test:home-intelligence": "pnpm exec tsx scripts/test-home-intelligence.ts",
-    "test:service-coordination": "pnpm dlx tsx scripts/test-service-coordination.ts"
+    "test:service-coordination": "pnpm dlx tsx scripts/test-service-coordination.ts",
+    "test:email-ingest": "node --env-file=.env.local --import tsx scripts/test-email-ingest.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",

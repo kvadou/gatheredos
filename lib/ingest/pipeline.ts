@@ -55,6 +55,20 @@ export type Proposal = {
   targetId?: string
 }
 
+/**
+ * Where an envelope came from. One cascade serves every source: uploaded
+ * documents (fileId set) and contractor emails (fileId null). `sourceKey` is
+ * the stable per-source identity the source-keyed appliers dedupe on, so a
+ * re-run corrects a row instead of writing a second one.
+ */
+export type CascadeSource = {
+  homeId: string
+  extractionId: string | null
+  sourceKey: string
+  fileId?: string
+  pipeline: string
+}
+
 /** Confidence gate (§2): auto ≥ 0.85, queue 0.50–0.85, drop < 0.50. */
 const AUTO = 0.85
 const QUEUE = 0.5
@@ -82,7 +96,12 @@ export async function ingestFile(fileId: string): Promise<void> {
       catalogProvider: envelope.catalogMatch?.provider ?? null,
     })
     await finishExtraction(db, ex.id, envelope)
-    await applyCascade(db, file, ex.id, envelope, 1)
+    await applyCascade(
+      db,
+      { homeId: file.home_id, extractionId: ex.id, sourceKey: file.id, fileId: file.id, pipeline: 'ingestFile' },
+      envelope,
+      1,
+    )
     // One depth-2 reasoning pass, at most (§1 budget): inspection summary XOR
     // a replacement forecast for whichever item this document touched.
     const updated = envelope.proposals.find((p) => p.target === 'items' && p.action === 'update' && p.targetId)
@@ -203,21 +222,21 @@ function isNewEntity(p: Proposal): boolean {
  */
 export async function applyCascade(
   db: Admin,
-  file: FileRow,
-  extractionId: string,
+  source: CascadeSource,
   env: ExtractEnvelope,
   depth: number,
 ): Promise<void> {
   if (depth >= MAX_DEPTH) {
     // Structurally unreachable (§4) — if it trips, that is a bug, logged loudly.
-    console.error(`[ingest] depth cap hit (${depth}) for file ${file.id} — refusing cascade`)
+    console.error(`[ingest] depth cap hit (${depth}) for ${source.sourceKey} — refusing cascade`)
     return
   }
   const provenance = {
-    pipeline: 'ingestFile',
+    pipeline: source.pipeline,
     model: env.model,
-    file_id: file.id,
-    extraction_id: extractionId,
+    file_id: source.fileId ?? null,
+    extraction_id: source.extractionId,
+    source_key: source.sourceKey,
     depth,
   }
 
@@ -225,7 +244,7 @@ export async function applyCascade(
     if (p.confidence < QUEUE) {
       await db.from('usage_events').insert({
         user_id: null as never,
-        home_id: file.home_id,
+        home_id: source.homeId,
         event: 'ai_low_confidence',
         props: { target: p.target, dedupeKey: p.dedupeKey, confidence: p.confidence } as never,
       })
@@ -233,10 +252,10 @@ export async function applyCascade(
     }
     // New entities go to the queue even at auto confidence — user confirms creation.
     if (isNewEntity(p) || p.confidence < AUTO) {
-      await queueSuggestion(db, file.home_id, p, provenance)
+      await queueSuggestion(db, source.homeId, p, provenance)
       continue
     }
-    await autoApply(db, file.home_id, p, { ...provenance, confidence: p.confidence })
+    await autoApply(db, source.homeId, p, { ...provenance, confidence: p.confidence })
   }
 }
 
@@ -293,13 +312,30 @@ export async function autoApply(
 ) {
   switch (p.target) {
     case 'care_events': {
-      // keyed by file_id: re-extraction corrects cost, never double-counts
-      const { data: existing } = await db
-        .from('care_events')
-        .select('id')
-        .eq('home_id', homeId)
-        .eq('provenance->>file_id', String(provenance.file_id))
-        .maybeSingle()
+      // Keyed by source: re-extraction corrects cost, never double-counts.
+      // source_key covers both sources (file id / email message id); the
+      // file_id fallback still matches rows written before source_key existed.
+      const sourceKey = provenance.source_key ? String(provenance.source_key) : null
+      const legacyFileId = provenance.file_id ? String(provenance.file_id) : null
+      let existing: { id: string } | null = null
+      if (sourceKey) {
+        const { data } = await db
+          .from('care_events')
+          .select('id')
+          .eq('home_id', homeId)
+          .eq('provenance->>source_key', sourceKey)
+          .maybeSingle()
+        existing = data
+      }
+      if (!existing && legacyFileId) {
+        const { data } = await db
+          .from('care_events')
+          .select('id')
+          .eq('home_id', homeId)
+          .eq('provenance->>file_id', legacyFileId)
+          .maybeSingle()
+        existing = data
+      }
       if (existing) {
         await db.from('care_events').update({ ...(p.payload as object), provenance: provenance as never }).eq('id', existing.id)
       } else {
@@ -407,7 +443,9 @@ export async function autoApply(
         source_kind: 'extraction',
         source_extraction_id: (provenance.extraction_id as string) ?? null,
         confidence: p.confidence,
-        evidence: [{ kind: 'file', id: provenance.file_id }],
+        evidence: provenance.file_id
+          ? [{ kind: 'file', id: provenance.file_id }]
+          : [{ kind: 'email', id: provenance.source_key ?? null }],
         // embedding left null — fill deferred by design (object-model §2.14).
       }
       // (a) structured slot: newest value for (subject, predicate) supersedes the prior one.
