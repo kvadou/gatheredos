@@ -314,6 +314,13 @@ async function buildProposals(
     company && senderName(header(msg, 'from')).toLowerCase().includes(company.toLowerCase().slice(0, 12)),
   )
   const identityConf = vendor || senderMatchesCompany ? Math.max(conf, 0.8) : conf
+  /**
+   * Same reasoning one step further: "Hero Plumbing sent an invoice on
+   * 2021-02-04" is worth recording even when the body never said what was done
+   * or what it cost. Capped below the auto-apply threshold so every one of
+   * these is confirmed by the user rather than written silently.
+   */
+  const recordConf = company ? Math.max(conf, Math.min(identityConf, 0.84)) : conf
 
   // The contractor themself. New entities always route to the review queue
   // (isNewEntity in the cascade), so this asks rather than asserts.
@@ -363,7 +370,7 @@ async function buildProposals(
         template_slug: key,
       },
       dedupeKey: key,
-      confidence: conf,
+      confidence: recordConf,
       summary: `${title} scheduled ${isoDate(d.scheduled_start)}`,
     })
   } else {
@@ -390,7 +397,7 @@ async function buildProposals(
           item_id: itemId,
         },
         dedupeKey: key,
-        confidence: conf,
+        confidence: recordConf,
         summary: d.summary ?? `${title} on ${occurred}`,
       })
 
@@ -406,7 +413,7 @@ async function buildProposals(
             kind: 'service',
           },
           dedupeKey: `${key}:timeline`,
-          confidence: conf,
+          confidence: recordConf,
           summary: `Add ${title} to your home timeline?`,
         })
       }

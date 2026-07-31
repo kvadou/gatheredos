@@ -582,9 +582,14 @@ function ContractorImportRow() {
               ))}
             </ul>
           )}
+          {/* Nothing new is not the same as nothing found — saying "no contractor
+              email found" after a run that only re-checked mail already on file
+              reads as a failure when the records are sitting in the review queue. */}
           {done && contractors.length === 0 && (totals?.imported ?? 0) === 0 && (
             <p className="mt-2 text-xs text-muted-foreground">
-              No contractor email found in the last five years. New appointments will import as they arrive.
+              {(totals?.skipped ?? 0) > 0
+                ? 'Every message found was already read. Anything new is waiting for you on the dashboard.'
+                : 'No contractor email found. New appointments will import as they arrive.'}
             </p>
           )}
           {remaining && (
