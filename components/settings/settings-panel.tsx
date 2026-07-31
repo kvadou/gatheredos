@@ -29,13 +29,15 @@ import {
   BadgeDollarSign,
   History as HistoryIcon,
   Wrench,
+  Paperclip,
+  ChevronDown,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Database } from '@/lib/supabase/database.types'
 import { updateHome, removeMember, updateProfileName, updateNotificationPreferences } from '@/lib/actions/settings'
 import { deleteAccount } from '@/lib/actions/account'
-import { disconnectGmail, syncContractorEmailNow } from '@/lib/actions/gmail'
+import { disconnectGmail, listImportLog, syncContractorEmailNow, type ImportLogEntry } from '@/lib/actions/gmail'
 import {
   createInvite,
   revokeInvite,
@@ -502,6 +504,25 @@ function ContractorImportRow() {
   const [contractors, setContractors] = useState<string[]>([])
   const [remaining, setRemaining] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [log, setLog] = useState<ImportLogEntry[] | null>(null)
+  const [showLog, setShowLog] = useState(false)
+  const [showAllLog, setShowAllLog] = useState(false)
+  const [loadingLog, setLoadingLog] = useState(false)
+
+  async function loadLog() {
+    setLoadingLog(true)
+    try {
+      setLog(await listImportLog())
+    } finally {
+      setLoadingLog(false)
+    }
+  }
+
+  function toggleLog() {
+    const next = !showLog
+    setShowLog(next)
+    if (next && !log) void loadLog()
+  }
 
   async function run() {
     setRunning(true)
@@ -536,10 +557,16 @@ function ContractorImportRow() {
     }
     if (more) setRemaining(true)
     setRunning(false)
+    // The log is the record of the run that just happened — refresh it if the
+    // user is looking, drop it if they are not so the next open is current.
+    if (showLog) await loadLog()
+    else setLog(null)
     router.refresh()
   }
 
   const done = !running && totals !== null && !error
+  const skippedLog = log?.filter((e) => e.status === 'skipped') ?? []
+  const visibleLog = showAllLog ? log ?? [] : log?.filter((e) => e.status !== 'skipped') ?? []
 
   return (
     <div className="border-t border-border/60 px-4 py-3.5">
@@ -606,8 +633,110 @@ function ContractorImportRow() {
       )}
 
       {error && <p className="mt-3 pl-11 text-xs text-destructive">{error}</p>}
+
+      <div className="mt-3 pl-11">
+        <button
+          type="button"
+          onClick={toggleLog}
+          aria-expanded={showLog}
+          data-testid="import-log-toggle"
+          className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ChevronDown
+            className={cn('size-3.5 transition-transform', showLog && 'rotate-180')}
+            strokeWidth={2}
+          />
+          What we read
+        </button>
+
+        {showLog && (
+          <div className="mt-2" data-testid="import-log">
+            {loadingLog && !log && <p className="text-xs text-muted-foreground">Loading…</p>}
+            {log && log.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Nothing read yet. Run an import to see every message here.
+              </p>
+            )}
+            {/* Most of a real mailbox is newsletters, and a list led by forty
+                bank offers hides the two rows worth checking. Default to the
+                messages that changed something (or failed trying); the rest
+                collapse behind a count. */}
+            {log && log.length > 0 && visibleLog.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Nothing recorded yet. Every message read so far was passed over.
+              </p>
+            )}
+            {visibleLog.length > 0 && (
+              <ul className="divide-y divide-border/60 rounded-xl border border-border/60">
+                {visibleLog.map((entry) => (
+                  <li key={entry.id} className="px-3 py-2">
+                    <div className="flex items-start gap-2">
+                      <ImportStatusDot status={entry.status} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium">{entry.from}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {entry.subject || 'No subject'}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                        {entry.sentAt ? new Date(entry.sentAt).toLocaleDateString() : ''}
+                      </span>
+                    </div>
+                    <p className="mt-1 pl-4 text-[11px] text-muted-foreground">
+                      {importOutcome(entry)}
+                      {entry.attachments > 0 && (
+                        <span className="ml-1.5 inline-flex items-center gap-1">
+                          <Paperclip className="size-3" strokeWidth={2} />
+                          {entry.attachments}
+                        </span>
+                      )}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!showAllLog && skippedLog.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAllLog(true)}
+                className="mt-2 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+              >
+                Show {skippedLog.length} message{skippedLog.length === 1 ? '' : 's'} we passed over
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
+}
+
+/** Plain-language outcome per message: the reason a homeowner would give. */
+function importOutcome(entry: ImportLogEntry): string {
+  switch (entry.status) {
+    case 'done':
+      // proposal_count is what the message offered, not what survived the
+      // confidence gate — some of these are still sitting in the review queue,
+      // so "found" is the honest verb.
+      return entry.recorded === 1 ? 'Found 1 record' : `Found ${entry.recorded} records`
+    case 'skipped':
+      return entry.skipReason ? `Skipped — ${entry.skipReason}` : 'Skipped — nothing to record'
+    case 'failed':
+      return 'Could not be read'
+    case 'processing':
+      return 'Reading…'
+    default:
+      return 'Waiting to be read'
+  }
+}
+
+function ImportStatusDot({ status }: { status: string }) {
+  const tone =
+    status === 'done' ? 'bg-emerald-500'
+      : status === 'failed' ? 'bg-destructive'
+        : status === 'processing' ? 'bg-amber-500'
+          : 'bg-muted-foreground/40'
+  return <span className={cn('mt-1.5 size-1.5 shrink-0 rounded-full', tone)} aria-hidden />
 }
 
 /* Disconnect Gmail with in-flight state, then refresh so the row flips back to

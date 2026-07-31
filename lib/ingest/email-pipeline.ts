@@ -72,6 +72,8 @@ export async function syncContractorEmail(input: {
   const accessToken = await accessTokenFrom(decryptToken(connection.refresh_token_ciphertext))
   const years = input.withinYears ?? 5
 
+  await sweepStranded(db, input.home.id)
+
   const platformIds = await listMessageIds(accessToken, gmailQuery(years), platformLimit)
   const wideIds = wideLimit > 0
     ? await listMessageIds(accessToken, wideQuery(years), wideLimit)
@@ -121,6 +123,27 @@ export async function syncContractorEmail(input: {
     }
   }
   return result
+}
+
+/**
+ * A batch that dies mid-message (serverless timeout, deploy, crash) leaves its
+ * row stuck on `processing` forever: no run ever revisits it and the import log
+ * reads as if work is still in flight. A message can never legitimately be in
+ * flight this long — one message is one Claude call — so anything older is a
+ * corpse. Marking it `failed` both tells the truth in the log and leaves it out
+ * of the done/skipped dedupe set, so the next run picks it up again.
+ */
+const STRANDED_AFTER_MS = 15 * 60 * 1000
+
+async function sweepStranded(db: Admin, homeId: string): Promise<void> {
+  const cutoff = new Date(Date.now() - STRANDED_AFTER_MS).toISOString()
+  const { error } = await db
+    .from('imported_messages' as never)
+    .update({ status: 'failed', error: 'stranded in processing — swept' } as never)
+    .eq('home_id', homeId)
+    .eq('status', 'processing')
+    .lt('updated_at', cutoff)
+  if (error) console.error('[email-ingest] stranded sweep failed:', error)
 }
 
 async function ingestMessage(

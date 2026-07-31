@@ -50,6 +50,60 @@ export async function syncContractorEmailNow() {
   }
 }
 
+export type ImportLogEntry = {
+  id: string
+  status: string
+  skipReason: string | null
+  from: string
+  subject: string | null
+  sentAt: string | null
+  recorded: number
+  attachments: number
+}
+
+/**
+ * What the importer actually read, most recent mail first.
+ *
+ * Without this the only record of a run lives in `imported_messages`, readable
+ * by SQL alone — so a wrongly-imported contractor (the failure mode that
+ * matters most here) is invisible to the person who would recognize it. Read
+ * through the user's own client: RLS scopes the log to homes they belong to.
+ */
+export async function listImportLog(limit = 40): Promise<ImportLogEntry[]> {
+  const { supabase } = await requireUser()
+  const home = await requireHome()
+
+  const { data } = await supabase
+    .from('imported_messages' as never)
+    .select('id,status,skip_reason,from_name,from_email,subject,sent_at,proposal_count,attachment_file_ids')
+    .eq('home_id', home.id)
+    .order('sent_at', { ascending: false, nullsFirst: false })
+    .limit(limit) as {
+      data: {
+        id: string
+        status: string
+        skip_reason: string | null
+        from_name: string | null
+        from_email: string | null
+        subject: string | null
+        sent_at: string | null
+        proposal_count: number
+        attachment_file_ids: string[] | null
+      }[] | null
+    }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    status: row.status,
+    skipReason: row.skip_reason,
+    from: row.from_name || row.from_email || 'Unknown sender',
+    subject: row.subject,
+    sentAt: row.sent_at,
+    recorded: row.proposal_count,
+    attachments: row.attachment_file_ids?.length ?? 0,
+  }))
+}
+
 export async function disconnectGmail() {
   const { user } = await requireUser()
   const db = createAdminClient()

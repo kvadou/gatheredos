@@ -51,3 +51,6 @@ ios/**/*.xcuserstate
 ios/**/DerivedData/
 ios/DerivedData/
 ios/build/
+
+# playwright-cli scratch output (the Next watcher picks it up mid-run)
+.playwright-cli/

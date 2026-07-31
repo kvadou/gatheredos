@@ -138,14 +138,19 @@ yet been exercised against real mail.
    not just contractor cards. This is the one unverified fix.
 2. **Doug must accept/reject the 4 contractor cards.** A contractor that never touched the house is
    a false positive and the failure mode that matters most.
-3. **Re-opening rows for reprocessing:** `imported_messages` rows with status `done`/`skipped` are
-   skipped on future runs. After a classifier change, delete the unproductive rows (any row whose
-   `email:<id>` source_key has no `care_events.provenance->>source_key` and no matching suggestion)
-   so they get re-read. Was done twice this session with a throwaway script; **if this happens a
-   third time, make it a real script** rather than re-authoring it.
-4. **Known gap: `processing` rows can strand** if a batch dies mid-message. No sweeper exists.
-5. **Known gap: no UI surfaces the import log.** `imported_messages` is only readable via SQL. A
-   "what did you read" view would make false positives visible without a DB query.
+3. ~~**Re-opening rows for reprocessing**~~ — **done (2026-07-31).** `pnpm reprocess:email --email
+   <addr>` (`scripts/reprocess-email.ts`). Dry run by default; `--apply` deletes. Keeps any row that
+   left a trace (a suggestion, or a `care_events`/`care_tasks`/`timeline_events` row stamped with its
+   `source_key`), and holds back confidently-rejected mail — the model's `not about work at this
+   home` verdict does not depend on the routing rules that get tuned, so re-reading 24 newsletters
+   would just re-spend 24 Claude calls. `--include-rejected` overrides that.
+4. ~~**`processing` rows can strand**~~ — **done (2026-07-31).** `sweepStranded()` runs at the top of
+   every sync: `processing` rows untouched for 15 minutes flip to `failed`, which both tells the
+   truth in the log and drops them out of the done/skipped dedupe set so the next run retries them.
+5. ~~**No UI surfaces the import log**~~ — **done (2026-07-31).** "What we read" disclosure under
+   Import service history, fed by `listImportLog()` (user's own client, RLS-scoped). Defaults to the
+   messages that produced something or failed; the skipped ones collapse behind a count. Each row
+   reads sender, subject, date, outcome and attachment count.
 6. **Deferred by design:** MCP server over the home (read tools + `open_service_case`), inbound
    forwarding address (no OAuth, no 7-day expiry, no scope review — the cheaper path if weekly
    reconnect gets annoying before verification is worth it), A2A endpoint.
@@ -173,7 +178,14 @@ shape that failed in production, idempotency, and the document path's legacy ded
   browser automation impossible. Verified against `pnpm build && pnpm start` instead. Root cause not
   chased; unrelated to this work.
 - **`playwright-cli` writes `.playwright-cli/` into the project root**, which the Next watcher picks
-  up. Run it with `cd` into a scratch dir. Worth gitignoring.
+  up. Run it with `cd` into a scratch dir. Now gitignored.
+- **Verifying a logged-in route locally.** Supabase's redirect allowlist has no localhost entry, so a
+  magic link always bounces to prod. What works: `generateLink` → `verifyOtp` with the hashed token →
+  write the session as a `sb-<ref>-auth-token` cookie (`base64-` + base64 JSON, chunked at 3180) into
+  a playwright storage-state file → `pw-verify <url> --state <file>`. Delete the state file after.
+- **`pnpm start` does not die with `pkill -f "next start"`** — the listener is `next-server`. Killing
+  the wrong name leaves a server running against a `.next` that was rebuilt underneath it, which
+  serves the old markup and 500s on chunk requests. Looks exactly like "my change didn't build".
 - **`.env.local` cannot be `source`d** — a multi-line value breaks zsh parsing. Parse it with Python
   or pass vars explicitly (`SUPABASE_DB_PASSWORD="$(...)" supabase db push`).
 - **Never paste a secret into a `vercel env add` command via clipboard** while the clipboard holds
