@@ -94,6 +94,9 @@ const KINDS = new Set<EmailKind>([
 const ITEM_CATEGORIES = new Set(['appliance', 'system', 'fixture', 'structure', 'equipment', 'safety'])
 const FACT_CATEGORIES = new Set(['spec', 'history', 'location', 'preference', 'financial'])
 
+/** Kinds whose email date is a fair stand-in for the service date. */
+const BILLING_KINDS = new Set<EmailKind>(['invoice', 'receipt', 'en_route'])
+
 /** Kinds that describe a real visit worth remembering. */
 const VISIT_KINDS = new Set<EmailKind>(['appointment', 'reminder', 'en_route', 'invoice', 'receipt'])
 
@@ -297,6 +300,21 @@ async function buildProposals(
   const itemId = await matchItem(db, home.id, d.item_hint)
   const conf = d.confidence
 
+  /**
+   * Who sent it is a separate question from what it says. A "your invoice is
+   * ready, click to view" email carries no date or amount, so field confidence
+   * is rightly low — but the company is named in the sender address and the
+   * subject, and mail from a field-service platform is per se a contractor
+   * writing to this homeowner. Scoring the contractor on field confidence
+   * threw away known contractors, which is the opposite of the point.
+   * New entities still route to the review queue, so the user confirms.
+   */
+  const vendor = vendorFor(senderEmail(header(msg, 'from')))
+  const senderMatchesCompany = Boolean(
+    company && senderName(header(msg, 'from')).toLowerCase().includes(company.toLowerCase().slice(0, 12)),
+  )
+  const identityConf = vendor || senderMatchesCompany ? Math.max(conf, 0.8) : conf
+
   // The contractor themself. New entities always route to the review queue
   // (isNewEntity in the cascade), so this asks rather than asserts.
   if (company) {
@@ -310,7 +328,7 @@ async function buildProposals(
         notes: d.service_type ? `${d.service_type} (imported from ${d.kind} email)` : 'Imported from contractor email',
       },
       dedupeKey: `email:contractor:${company.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-      confidence: conf,
+      confidence: identityConf,
       summary: `Add ${company} to your contractors?`,
     })
   }
@@ -349,14 +367,24 @@ async function buildProposals(
       summary: `${title} scheduled ${isoDate(d.scheduled_start)}`,
     })
   } else {
-    const occurred = isoDate(d.occurred_on) ?? isoDate(d.scheduled_start)
+    const stated = isoDate(d.occurred_on) ?? isoDate(d.scheduled_start)
+    const mailDate = msg.internalDate
+      ? new Date(Number(msg.internalDate)).toISOString().slice(0, 10)
+      : null
+    // Billing mail arrives within days of the work, so the message date is a
+    // defensible stand-in — but never silently: the note records where it came from.
+    const occurred = stated ?? (BILLING_KINDS.has(d.kind) ? mailDate : null)
+    const dateIsApproximate = !stated && Boolean(occurred)
     if (occurred) {
       proposals.push({
         target: 'care_events',
         action: 'insert',
         payload: {
           title,
-          note: d.work_performed ?? d.summary ?? null,
+          note: [
+            d.work_performed ?? d.summary ?? null,
+            dateIsApproximate ? 'Date taken from the email, which did not state a service date.' : null,
+          ].filter(Boolean).join(' ') || null,
           cost: d.amount,
           occurred_on: occurred,
           item_id: itemId,

@@ -182,6 +182,21 @@ Thanks,
 Otsego Gutter Co`,
 })
 
+/** The "your invoice is ready, click to view" shape: no date, no amount inline. */
+const OPAQUE_INVOICE = message({
+  id: 'fixture-opaque-1',
+  from: 'Hero Plumbing, Heating & Cooling <noreply+47803@servicetitan.com>',
+  subject: 'Your invoice from Hero Plumbing, Heating & Cooling',
+  sentAt: '2021-02-04T09:30:00-06:00',
+  body: `Hi Doug,
+
+Your invoice is ready. Click below to view and pay online.
+
+View Invoice
+
+Thank you for choosing Hero Plumbing, Heating & Cooling.`,
+})
+
 async function scratchHome() {
   const { data: profile } = await db.from('profiles').select('id').limit(1).maybeSingle()
   if (!profile) throw new Error('no profile in the database — run scripts/seed.ts first')
@@ -292,6 +307,29 @@ async function main() {
       est.envelope.proposals.some((p) => p.target === 'contractors'), est.envelope.proposals.map((p) => p.target))
     check('estimate: did NOT claim work happened',
       !est.envelope.proposals.some((p) => p.target === 'care_events'), est.envelope.proposals.map((p) => p.target))
+
+    // 4d. A contractor known from the sender must survive low field confidence.
+    const op = await run(OPAQUE_INVOICE)
+    check('opaque invoice: company read from sender', op.extract.company?.includes('Hero Plumbing') === true, op.extract.company)
+    const contractorProposal = op.envelope.proposals.find((p) => p.target === 'contractors')
+    check('opaque invoice: contractor proposed', Boolean(contractorProposal), op.envelope.proposals.map((p) => p.target))
+    check('opaque invoice: contractor survives the confidence floor',
+      (contractorProposal?.confidence ?? 0) >= 0.5, contractorProposal?.confidence)
+    const { data: heroSugg } = await db
+      .from('suggestions')
+      .select('summary')
+      .eq('home_id', home.id)
+      .eq('target', 'contractors')
+      .ilike('summary', '%Hero Plumbing%')
+      .maybeSingle()
+    check('opaque invoice: contractor reached the review queue', Boolean(heroSugg), heroSugg)
+    const dated = op.envelope.proposals.find((p) => p.target === 'care_events')
+    check('opaque invoice: fell back to the email date',
+      (dated?.payload as { occurred_on?: string })?.occurred_on === '2021-02-04',
+      (dated?.payload as { occurred_on?: string })?.occurred_on)
+    check('opaque invoice: note discloses the approximate date',
+      String((dated?.payload as { note?: string })?.note ?? '').includes('Date taken from the email'),
+      (dated?.payload as { note?: string })?.note)
 
     // 5. Re-run the same message → no duplicate rows.
     const before = await db.from('care_events').select('id', { count: 'exact', head: true }).eq('home_id', home.id)
