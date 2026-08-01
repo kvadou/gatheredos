@@ -15,7 +15,9 @@
     "test:home-intelligence": "pnpm exec tsx scripts/test-home-intelligence.ts",
     "test:service-coordination": "pnpm dlx tsx scripts/test-service-coordination.ts",
     "test:email-ingest": "node --env-file=.env.local --import tsx scripts/test-email-ingest.ts",
-    "reprocess:email": "node --env-file=.env.local --import tsx scripts/reprocess-email.ts"
+    "reprocess:email": "node --env-file=.env.local --import tsx scripts/reprocess-email.ts",
+    "test:spend-rules": "node --env-file=.env.local --import tsx scripts/test-spend-rules.ts",
+    "cleanup:spend": "node --env-file=.env.local --import tsx scripts/cleanup-spend.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",

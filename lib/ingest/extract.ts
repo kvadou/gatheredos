@@ -43,7 +43,8 @@ const JSON_SHAPE = `{
   "scope_reason": string | null (short plain-language reason),
   "vendor": string | null,
   "purchase_date": "YYYY-MM-DD" | null,
-  "total": number | null (grand total paid, if a purchase document),
+  "total": number | null (grand total, if a purchase document),
+  "is_estimate": true | false (TRUE if this document quotes work that has not been paid for: an estimate, quote, proposal, bid, or one option in a good/better/best option sheet. FALSE only for a real record of money already spent — a paid invoice or receipt. When a contractor sends several priced options, every one of them is an estimate.),
   "line_items": ["one entry per purchased line, e.g. Grill cover — $89.99"] | null,
   "item_name": "the appliance/system this document is about, e.g. Water heater" | null,
   "item_category": "appliance" | "system" | "fixture" | "structure" | "equipment" | "safety" | null,
@@ -59,6 +60,58 @@ const JSON_SHAPE = `{
   "findings": [{ "system": "Roof", "condition": string, "severity": "low" | "medium" | "high", "recommendation": string | null }] | null (inspection reports only: one entry per flagged finding),
   "facts": [{ "statement": "one atomic durable sentence about the home worth remembering, e.g. The water heater is a Rheem XE50T10 installed July 2026", "predicate": "optional slot like model|installed_on|paint_color|filter_size|serviced_by" | null, "object_value": string | null, "category": "spec" | "history" | "location" | "preference" | "financial", "confidence": 0.0-1.0 }] | null
 }`
+
+/**
+ * Quote markers, checked against the filename and the transcribed text.
+ *
+ * A priced quote and a paid invoice look nearly identical to a vision model,
+ * and getting it wrong is expensive in one direction only: a good/better/best
+ * option sheet from one plumbing visit put ~$12,000 of work the homeowner never
+ * bought into their spend history. So `is_estimate` is not left to the model
+ * alone — any of these markers forces it true. A missed estimate corrupts the
+ * money; a document wrongly called an estimate only loses one spend row, which
+ * the invoice in the same email usually carries anyway.
+ *
+ * Exported because `scripts/cleanup-spend.ts` replays it over already-stored
+ * `extractions.raw_text`, which is how existing bad rows get found without
+ * paying for a second extraction pass.
+ */
+const ESTIMATE_MARKERS = [
+  /\bestimates?\b/i,
+  /\bquotes?\b/i,
+  /\bquotation\b/i,
+  /\bproposals?\b/i,
+  /\bbids?\b/i,
+  /\bnot an invoice\b/i,
+  /\bpricing options?\b/i,
+  /\bgood[\s,/-]+better[\s,/-]+best\b/i,
+  /\boption\s+[123abc]\b/i,
+  /\bvalid (?:for|until|through)\b/i,
+  /\bexpires? on\b/i,
+]
+/** Filenames from option sheets are often just the tier: Good.pdf, Best.pdf. */
+const ESTIMATE_FILENAMES = /^(good|better|best|option[\s_-]*[123abc]?)\.[a-z]+$/i
+
+/**
+ * The identity of a purchase: who, when, how much. Null when any part is
+ * missing, so callers fall back to a source-scoped key rather than collapsing
+ * unrelated rows onto `spend:::`.
+ */
+export function spendKey(
+  vendor: string | null | undefined,
+  occurredOn: string | null | undefined,
+  total: number | null | undefined,
+): string | null {
+  const name = vendor?.trim().toLowerCase().replace(/\s+/g, ' ')
+  if (!name || !occurredOn || total == null) return null
+  return `spend:${name}:${occurredOn}:${total.toFixed(2)}`
+}
+
+export function looksLikeEstimate(text: string, fileName?: string | null): boolean {
+  if (fileName && ESTIMATE_FILENAMES.test(fileName.trim())) return true
+  const haystack = `${fileName ?? ''}\n${text}`
+  return ESTIMATE_MARKERS.some((re) => re.test(haystack))
+}
 
 const CATEGORIES = new Set(['appliance', 'system', 'fixture', 'structure', 'equipment', 'safety'])
 const WARRANTY_KINDS = new Set(['manufacturer', 'extended', 'home-warranty', 'labor'])
@@ -76,6 +129,7 @@ type Extracted = {
   vendor: string | null
   purchase_date: string | null
   total: number | null
+  is_estimate: boolean
   line_items: string[] | null
   item_name: string | null
   item_category: string | null
@@ -178,6 +232,7 @@ ${JSON_SHAPE}`,
   if (catalogMatch) mergeCatalogEvidence(data, catalogMatch)
   normalizeScope(data, `${safeName} ${safeScanText}`)
   // enum-ish fields are free text in the flat schema — validate here
+  data.is_estimate = data.is_estimate === true || looksLikeEstimate(data.raw_text ?? '', file.name)
   if (data.item_category && !CATEGORIES.has(data.item_category)) data.item_category = null
   if (data.warranty_kind && !WARRANTY_KINDS.has(data.warranty_kind)) data.warranty_kind = null
   if (Array.isArray(data.facts)) {
@@ -268,21 +323,31 @@ async function buildProposals(db: Admin, file: FileRow, d: Extracted, catalogMat
   const proposals: Proposal[] = []
   const conf = () => d.confidence
 
-  // Spend: one care_event keyed by file_id — re-extraction corrects, never doubles
-  if (d.doc_type === 'receipt' && d.total != null && d.total > 0) {
+  // Spend: money that actually left the house. A quote is not spend — see
+  // ESTIMATE_MARKERS. Everything else about a quote still gets extracted (the
+  // contractor, the item, the facts); only the money is withheld.
+  if (d.doc_type === 'receipt' && !d.is_estimate && d.total != null && d.total > 0) {
+    const vendor = d.vendor ?? file.name
+    const occurredOn = d.purchase_date ?? file.created_at.slice(0, 10)
     proposals.push({
       target: 'care_events',
       action: 'insert',
       payload: {
-        title: `Purchase — ${d.vendor ?? file.name}`,
+        title: `Purchase — ${vendor}`,
         note: d.line_items?.slice(0, 5).join('; ') ?? null,
         cost: d.total,
-        occurred_on: d.purchase_date ?? file.created_at.slice(0, 10),
+        occurred_on: occurredOn,
         item_id: file.item_id,
       },
-      dedupeKey: `file:${file.id}`,
+      // Semantic, not per-file: field-service platforms re-render the same
+      // invoice for every message they send it in, so the bytes differ and the
+      // content-hash dedupe on `files` never fires. One vendor, one date, one
+      // amount is one purchase however many PDFs of it arrive. Falls back to
+      // the file key when any part is unknown, which keeps the old
+      // "re-extraction corrects, never doubles" behaviour for scanned receipts.
+      dedupeKey: spendKey(vendor, occurredOn, d.total) ?? `file:${file.id}`,
       confidence: conf(),
-      summary: `Record $${d.total.toFixed(2)} purchase from ${d.vendor ?? file.name}?`,
+      summary: `Record $${d.total.toFixed(2)} purchase from ${vendor}?`,
     })
   }
 
@@ -300,7 +365,8 @@ async function buildProposals(db: Admin, file: FileRow, d: Extracted, catalogMat
     if (d.manufacturer) fields.manufacturer = d.manufacturer
     if (d.model) fields.model = d.model
     if (d.serial) fields.serial = d.serial
-    if (d.purchase_date && d.doc_type === 'receipt') fields.installed_on = d.purchase_date
+    // A quote's date is when it was offered, not when anything was installed.
+    if (d.purchase_date && d.doc_type === 'receipt' && !d.is_estimate) fields.installed_on = d.purchase_date
     if (catalogMatch) {
       fields.catalog_product_id = catalogMatch.catalogProductId
       fields.catalog_match_confidence = catalogMatch.confidence

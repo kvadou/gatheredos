@@ -157,9 +157,42 @@ yet been exercised against real mail.
 
 ---
 
+## What the 2026-08-01 re-import found
+
+The re-run confirmed the identity-confidence fix: the reprocessed Hero invoice produced a
+`care_events` proposal at 0.80, queued for review exactly as designed. But the visit records already
+in the home came almost entirely from the **PDF attachments**, and that path had two defects the
+email path had already learned about:
+
+1. **Quotes counted as spend.** The Hero email carried `Good.pdf`, `Better.pdf`, `Best.pdf` (a
+   good/better/best option sheet) plus the real `Invoice_458842.pdf`. Each option became a completed
+   purchase. Both B&D PDFs said `ESTIMATE #` in the header and did the same. Recorded spend was
+   $26,631.09 against $168.87 actually paid.
+2. **One purchase, N rows.** ServiceTitan re-renders the invoice PDF per send, so two messages
+   carrying the same invoice produced two `files` rows with different content hashes — the
+   content-hash dedupe cannot see they are the same document.
+
+Fixes (2026-08-01):
+- `is_estimate` in the extraction schema, plus `looksLikeEstimate()` — a deterministic marker list
+  that forces it true regardless of what the model said. Asymmetric on purpose: a missed estimate
+  corrupts the money, a false positive loses one spend row the real invoice usually carries anyway.
+  A quote still yields its contractor, item and facts; only the money is withheld. It also no longer
+  sets `installed_on`.
+- `spendKey(vendor, date, total)` is the `care_events` dedupe key when all three are known (falling
+  back to `file:<id>`), and `autoApply` matches on title+date+cost as a last resort so rows already
+  written converge.
+- `pnpm cleanup:spend` repairs existing data, replaying `looksLikeEstimate()` over stored
+  `extractions.raw_text` so it needs no new Claude calls. Recomputes `projects.spent`, which is a
+  stored rollup off `care_events`.
+
+Open question, not chased: the 2020 B&D estimates name **7064 Peony Lane N**, not the home's
+7263 Little Ave NE. Multi-property routing is still deliberately unimplemented (`service_address` is
+recorded but not routed on), so pre-move mail lands in the current home.
+
 ## Verification
 
 ```bash
+pnpm test:spend-rules     # 18 checks, no Claude calls, seconds
 pnpm test:email-ingest    # 37 checks, real haiku, ~2 min, costs a few cents
 pnpm tsc --noEmit
 pnpm lint

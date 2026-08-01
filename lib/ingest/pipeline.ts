@@ -336,6 +336,25 @@ export async function autoApply(
           .maybeSingle()
         existing = data
       }
+      // Last resort, the purchase's own identity. Two byte-different PDFs of
+      // one invoice (field-service platforms re-render per send) arrive as two
+      // sources with two source_keys, so source identity alone cannot see that
+      // they are the same $118.87 on the same day from the same vendor.
+      if (!existing) {
+        const payload = p.payload as { title?: string; cost?: number | null; occurred_on?: string | null }
+        if (payload.title && payload.occurred_on && payload.cost != null) {
+          const { data } = await db
+            .from('care_events')
+            .select('id')
+            .eq('home_id', homeId)
+            .eq('title', payload.title)
+            .eq('occurred_on', payload.occurred_on)
+            .eq('cost', payload.cost)
+            .limit(1)
+            .maybeSingle()
+          existing = data
+        }
+      }
       if (existing) {
         await db.from('care_events').update({ ...(p.payload as object), provenance: provenance as never }).eq('id', existing.id)
       } else {
@@ -591,7 +610,9 @@ async function fillItemFields(
   }
 }
 
-async function recomputeProjectSpend(db: Admin, homeId: string, projectId: string) {
+/** Exported for scripts/cleanup-spend.ts: deleting a care_event leaves the
+ *  project rollup stale, and the invariant should live in one place. */
+export async function recomputeProjectSpend(db: Admin, homeId: string, projectId: string) {
   const { data } = await db
     .from('care_events')
     .select('cost')
