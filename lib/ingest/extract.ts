@@ -3,6 +3,7 @@ import type { Database } from '@/lib/supabase/database.types'
 import type { createAdminClient } from '@/lib/supabase/admin'
 import type { ExtractEnvelope, Proposal } from '@/lib/ingest/pipeline'
 import { slugify } from '@/lib/care-data'
+import { contractorKey, itemKey, spendKey } from '@/lib/ingest/keys'
 import { homeCategoryForCatalog, resolveCatalogProduct } from '@/lib/catalog/resolver'
 import type { CatalogMatch } from '@/lib/catalog/types'
 
@@ -91,21 +92,6 @@ const ESTIMATE_MARKERS = [
 ]
 /** Filenames from option sheets are often just the tier: Good.pdf, Best.pdf. */
 const ESTIMATE_FILENAMES = /^(good|better|best|option[\s_-]*[123abc]?)\.[a-z]+$/i
-
-/**
- * The identity of a purchase: who, when, how much. Null when any part is
- * missing, so callers fall back to a source-scoped key rather than collapsing
- * unrelated rows onto `spend:::`.
- */
-export function spendKey(
-  vendor: string | null | undefined,
-  occurredOn: string | null | undefined,
-  total: number | null | undefined,
-): string | null {
-  const name = vendor?.trim().toLowerCase().replace(/\s+/g, ' ')
-  if (!name || !occurredOn || total == null) return null
-  return `spend:${name}:${occurredOn}:${total.toFixed(2)}`
-}
 
 export function looksLikeEstimate(text: string, fileName?: string | null): boolean {
   if (fileName && ESTIMATE_FILENAMES.test(fileName.trim())) return true
@@ -396,7 +382,7 @@ async function buildProposals(db: Admin, file: FileRow, d: Extracted, catalogMat
         },
         dedupeKey: catalogMatch
           ? `catalog-item:${catalogMatch.catalogProductId}`
-          : `item:${(outOfScope ? 'other' : (d.item_category ?? 'appliance')).toLowerCase()}:${(d.manufacturer ?? '?').toLowerCase()}:${(d.model ?? d.item_name ?? '?').toLowerCase()}`,
+          : itemKey(outOfScope ? 'other' : d.item_category, d.item_name ?? d.model),
         confidence: conf(),
         summary: `Add "${d.item_name ?? d.manufacturer + ' ' + d.model}" to your Library?`,
         reviewContext: { scopeStatus: d.scope_status, scopeReason: d.scope_reason },
@@ -538,7 +524,7 @@ async function buildProposals(db: Admin, file: FileRow, d: Extracted, catalogMat
       target: 'contractors',
       action: 'insert',
       payload: { name: d.warranty_provider, phone: d.claim_phone, notes: 'Warranty claims' },
-      dedupeKey: `contractor:${d.warranty_provider.toLowerCase()}`,
+      dedupeKey: contractorKey(d.warranty_provider),
       confidence: conf(),
       summary: `Save ${d.warranty_provider} to your contacts for warranty claims?`,
     })
@@ -562,7 +548,15 @@ async function buildProposals(db: Admin, file: FileRow, d: Extracted, catalogMat
   }
 
   // Inspection findings (§7.4) → one care_task per finding; high severity also seeds a project.
-  if (Array.isArray(d.findings)) {
+  //
+  // Gated on the document actually being an inspection report. A plumber
+  // writing "water supply lines: corroded" on an invoice is describing the job
+  // he did, not handing the homeowner a punch list, and the model reports both
+  // shapes in `findings`. Ungated, one Hero Plumbing visit put 18 to-dos and 2
+  // projects into the review queue off a quote sheet. The §7.4 inspection
+  // summary in pipeline.ts has always carried this guard; the proposals that
+  // feed it did not.
+  if (d.doc_type === 'inspection' && Array.isArray(d.findings)) {
     for (const f of d.findings) {
       const system = typeof f?.system === 'string' ? f.system.trim() : ''
       const condition = typeof f?.condition === 'string' ? f.condition.trim() : ''

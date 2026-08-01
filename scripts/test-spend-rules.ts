@@ -14,7 +14,8 @@
  * Run: pnpm test:spend-rules
  */
 import { createAdminClient } from '../lib/supabase/admin'
-import { looksLikeEstimate, spendKey } from '../lib/ingest/extract'
+import { looksLikeEstimate } from '../lib/ingest/extract'
+import { spendKey } from '../lib/ingest/keys'
 import { applyCascade, type Proposal } from '../lib/ingest/pipeline'
 
 const db = createAdminClient()
@@ -79,7 +80,11 @@ async function main() {
   }
 
   // ---- the spend key ----
-  check('spendKey normalizes vendor', spendKey('  Hero Plumbing  ', '2021-02-04', 118.87) === 'spend:hero plumbing:2021-02-04:118.87')
+  check('spendKey normalizes vendor', spendKey('  Hero Plumbing  ', '2021-02-04', 118.87) === 'spend:contractor:hero-plumbing:2021-02-04:118.87')
+  // The drift that made two renders of one invoice look like two vendors.
+  check('spendKey collapses & and "and"',
+    spendKey('Hero Plumbing, Heating & Cooling', '2021-02-04', 118.87)
+      === spendKey('Hero Plumbing, Heating and Cooling', '2021-02-04', 118.87))
   check('spendKey is null without a vendor', spendKey(null, '2021-02-04', 10) === null)
   check('spendKey is null without a cost', spendKey('X', '2021-02-04', null) === null)
 

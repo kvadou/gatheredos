@@ -189,10 +189,34 @@ Open question, not chased: the 2020 B&D estimates name **7064 Peony Lane N**, no
 7263 Little Ave NE. Multi-property routing is still deliberately unimplemented (`service_address` is
 recorded but not routed on), so pre-move mail lands in the current home.
 
+## Review-queue quality (2026-08-01)
+
+The same defect class one layer up: 37 pending cards, of which 26 were noise.
+
+1. **Findings off non-inspection documents.** A plumber describing what he saw
+   ("water supply lines: corroded") on an invoice is not handing over a punch list, but the model
+   reports both shapes in `findings`. One Hero visit produced 18 to-dos and 2 projects. The §7.4
+   inspection *summary* in `pipeline.ts` always carried a `docType === 'inspection'` guard; the
+   proposals feeding it did not. Now they do.
+2. **Keys built from model prose.** One Rheem water heater became five cards because the key
+   preferred `model` ("40 gallon natural gas power-vent water heater", four ways) over `item_name`
+   ("Water heater"), which never drifted. `itemKey` now keys on category + name only. Manufacturer
+   is out of the key too: it is often absent, and a null must not fork a second card. The trade is
+   that two real water heaters in one home propose one card — better than five for one.
+3. **Two key formats for one contractor.** The document path built `contractor:<raw lowercase>`,
+   the email path `email:contractor:<slug>`, so B&D could never dedupe against itself across
+   sources. Both now call `contractorKey()`, which also strips legal suffixes (Inc/LLC/Co) and
+   folds `&` into `and` — the same drift that split one invoice into two vendors in `spendKey`.
+
+`lib/ingest/keys.ts` is now the single home for every prose-derived dedupe key.
+`pnpm cleanup:queue` repairs existing cards (pending only — accepted and rejected are user
+decisions), keeping the most confident card and, on a tie, the one with the most fields filled.
+
 ## Verification
 
 ```bash
-pnpm test:spend-rules     # 18 checks, no Claude calls, seconds
+pnpm test:review-queue    # 7 checks, no Claude calls, instant
+pnpm test:spend-rules     # 19 checks, no Claude calls, seconds
 pnpm test:email-ingest    # 37 checks, real haiku, ~2 min, costs a few cents
 pnpm tsc --noEmit
 pnpm lint

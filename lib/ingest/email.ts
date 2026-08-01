@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { createAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/lib/supabase/database.types'
 import type { ExtractEnvelope, Proposal } from '@/lib/ingest/pipeline'
+import { contractorKey } from '@/lib/ingest/keys'
 import { bodyText, header, senderEmail, senderName, type GmailMessage } from '@/lib/gmail/message'
 
 /**
@@ -334,7 +335,7 @@ async function buildProposals(
         phone: d.contractor_phone ?? null,
         notes: d.service_type ? `${d.service_type} (imported from ${d.kind} email)` : 'Imported from contractor email',
       },
-      dedupeKey: `email:contractor:${company.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      dedupeKey: contractorKey(company),
       confidence: identityConf,
       summary: `Add ${company} to your contractors?`,
     })
