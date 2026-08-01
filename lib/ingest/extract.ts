@@ -93,6 +93,38 @@ const ESTIMATE_MARKERS = [
 /** Filenames from option sheets are often just the tier: Good.pdf, Best.pdf. */
 const ESTIMATE_FILENAMES = /^(good|better|best|option[\s_-]*[123abc]?)\.[a-z]+$/i
 
+/**
+ * Work performed, not a thing the home owns.
+ *
+ * A contractor's invoice lists labour, and the extractor read those lines as
+ * durable goods: "Plumbing repair service", "Plumbing/HVAC consultation
+ * service" and "Kitchen plumbing installation and repairs" all landed as Library
+ * items. The Library is a register of what the home HAS.
+ *
+ * Matched by position, not by keyword anywhere in the string, because the
+ * obvious keyword list is a trap: a "Service panel" and a "Water service line"
+ * are both real fixtures. A work noun at the END is the reliable signal
+ * ("Plumbing repair SERVICE"). At the start it needs "of" behind it ("Repair OF
+ * kitchen sink") — a bare leading noun is usually an adjective, and dropping
+ * "Maintenance hatch" or "Installation kit" would silently lose a real fixture.
+ *
+ * Biased toward keeping, deliberately, and opposite to `looksLikeEstimate`. A
+ * service wrongly kept is one card the user rejects; a fixture wrongly dropped
+ * never reaches them at all.
+ */
+const WORK_NOUNS = new Set([
+  'service', 'repair', 'installation', 'replacement', 'consultation',
+  'labor', 'labour', 'diagnostic', 'maintenance', 'cleaning', 'tuneup', 'inspection',
+])
+
+export function looksLikeService(name: string): boolean {
+  const words = name.toLowerCase().replace(/[^a-z\s/]+/g, ' ').split(/[\s/]+/).filter(Boolean)
+  if (!words.length) return false
+  const singular = (w: string) => (w.endsWith('s') ? w.slice(0, -1) : w)
+  if (WORK_NOUNS.has(singular(words[words.length - 1]))) return true
+  return words[1] === 'of' && WORK_NOUNS.has(singular(words[0]))
+}
+
 export function looksLikeEstimate(text: string, fileName?: string | null): boolean {
   if (fileName && ESTIMATE_FILENAMES.test(fileName.trim())) return true
   const haystack = `${fileName ?? ''}\n${text}`
@@ -369,7 +401,7 @@ async function buildProposals(db: Admin, file: FileRow, d: Extracted, catalogMat
         confidence: conf(),
         summary: `Fill in ${match.name} details from ${file.name}?`,
       })
-    } else {
+    } else if (!looksLikeService(d.item_name ?? '')) {
       const outOfScope = d.scope_status === 'out_of_scope'
       proposals.push({
         target: 'items',

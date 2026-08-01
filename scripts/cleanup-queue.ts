@@ -1,11 +1,13 @@
 /**
  * Clear review-queue noise written before the queue-quality rules landed.
  *
- * Two sources of clutter, both now fixed at the source:
+ * Three sources of clutter, all now fixed at the source:
  *   1. Inspection findings proposed off documents that are not inspection
  *      reports. A plumber's invoice describing what he saw ("water supply
  *      lines: corroded") became a to-do; one visit produced 18 of them.
- *   2. Cards keyed on raw model prose. One Rheem water heater became five
+ *   2. Work performed, filed as a thing the home owns. "Plumbing repair
+ *      service" is not a Library item.
+ *   3. Cards keyed on raw model prose. One Rheem water heater became five
  *      cards; one contractor became two, because the document and email
  *      pipelines built contractor keys in different formats.
  *
@@ -19,6 +21,7 @@
  */
 import { createAdminClient } from '../lib/supabase/admin'
 import { contractorKey, itemKey } from '../lib/ingest/keys'
+import { looksLikeService } from '../lib/ingest/extract'
 
 type Suggestion = {
   id: string
@@ -81,8 +84,15 @@ async function main() {
     if (docTypes.get(extractionId) !== 'inspection') strayFindings.push(s)
   }
 
-  // ---- pass 2: cards that collapse onto one key under the new rules ----
-  const doomed = new Set(strayFindings.map((s) => s.id))
+  // ---- pass 2: work performed, filed as a thing the home owns ----
+  const services = pending.filter((s) => {
+    if (s.target !== 'items' || s.dedupe_key.startsWith('item-fill:')) return false
+    const name = s.payload?.name
+    return typeof name === 'string' && looksLikeService(name)
+  })
+
+  // ---- pass 3: cards that collapse onto one key under the new rules ----
+  const doomed = new Set([...strayFindings, ...services].map((s) => s.id))
   const best = new Map<string, Suggestion>()
   const collapsed: { loser: Suggestion; winner: Suggestion }[] = []
   for (const s of pending) {
@@ -108,13 +118,15 @@ async function main() {
   const line = (s: Suggestion) => `${s.target.padEnd(12)} ${String(s.confidence).slice(0, 4).padEnd(5)} ${s.summary.slice(0, 58)}`
   console.log(`Findings from documents that are not inspections (${strayFindings.length}):`)
   for (const s of strayFindings) console.log(`  ${line(s)}`)
+  console.log(`\nWork performed, filed as an owned thing (${services.length}):`)
+  for (const s of services) console.log(`  ${line(s)}`)
   console.log(`\nDuplicate cards for one thing (${collapsed.length}):`)
   for (const { loser, winner } of collapsed) {
     console.log(`  ${line(loser)}`)
     console.log(`      folds into: ${line(winner)}`)
   }
 
-  const removing = [...strayFindings, ...collapsed.map((c) => c.loser)]
+  const removing = [...strayFindings, ...services, ...collapsed.map((c) => c.loser)]
   console.log(`\nPending: ${pending.length} → ${pending.length - removing.length} (removing ${removing.length})`)
   if (!removing.length) return
   if (!apply) {

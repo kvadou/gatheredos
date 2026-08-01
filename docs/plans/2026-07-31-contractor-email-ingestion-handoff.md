@@ -203,7 +203,14 @@ The same defect class one layer up: 37 pending cards, of which 26 were noise.
    ("Water heater"), which never drifted. `itemKey` now keys on category + name only. Manufacturer
    is out of the key too: it is often absent, and a null must not fork a second card. The trade is
    that two real water heaters in one home propose one card — better than five for one.
-3. **Two key formats for one contractor.** The document path built `contractor:<raw lowercase>`,
+3. **Work performed, filed as an owned thing.** "Plumbing repair service" and "Kitchen plumbing
+   installation and repairs" reached the Library, which is a register of what the home HAS.
+   `looksLikeService()` matches by position, not by keyword anywhere: a work noun at the END is the
+   signal, and at the start it needs "of" behind it. The obvious keyword list is a trap — "Service
+   panel", "Water service line", "Maintenance hatch" and "Installation kit" are all real fixtures.
+   Biased toward keeping, opposite to `looksLikeEstimate`: a service wrongly kept is one card the
+   user rejects, a fixture wrongly dropped never reaches them.
+4. **Two key formats for one contractor.** The document path built `contractor:<raw lowercase>`,
    the email path `email:contractor:<slug>`, so B&D could never dedupe against itself across
    sources. Both now call `contractorKey()`, which also strips legal suffixes (Inc/LLC/Co) and
    folds `&` into `and` — the same drift that split one invoice into two vendors in `spendKey`.
@@ -215,7 +222,7 @@ decisions), keeping the most confident card and, on a tie, the one with the most
 ## Verification
 
 ```bash
-pnpm test:review-queue    # 7 checks, no Claude calls, instant
+pnpm test:review-queue    # 20 checks, no Claude calls, instant
 pnpm test:spend-rules     # 19 checks, no Claude calls, seconds
 pnpm test:email-ingest    # 37 checks, real haiku, ~2 min, costs a few cents
 pnpm tsc --noEmit

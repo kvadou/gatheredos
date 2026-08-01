@@ -16,6 +16,7 @@
  * Run: pnpm test:review-queue
  */
 import { contractorKey, itemKey } from '../lib/ingest/keys'
+import { looksLikeService } from '../lib/ingest/extract'
 
 let failures = 0
 function check(label: string, ok: boolean, detail?: unknown) {
@@ -72,6 +73,32 @@ distinct('different contractors stay distinct', [
 check('an all-suffix name keeps an identity',
   contractorKey('LLC') !== contractorKey('Inc') && contractorKey('LLC') !== 'contractor:',
   [contractorKey('LLC'), contractorKey('Inc')])
+
+// Work performed is not a thing the home owns. The first three are real cards
+// that reached the Library off one plumbing invoice.
+for (const name of [
+  'Plumbing repair service',
+  'Plumbing/HVAC consultation service',
+  'Kitchen plumbing installation and repairs',
+  'Water heater replacement',
+  'Repair of kitchen sink',
+  'Annual maintenance',
+]) {
+  check(`service: "${name}" is not a Library item`, looksLikeService(name) === true)
+}
+// The keyword-anywhere version of this rule would throw all of these away.
+for (const name of [
+  'Service panel',
+  'Water service line',
+  'Water heater',
+  'Rheem 40 gallon power vent',
+  'Dishwasher',
+  'Maintenance hatch',
+  'Installation kit',
+  'Cleaning closet',
+]) {
+  check(`item: "${name}" stays a Library item`, looksLikeService(name) === false)
+}
 
 console.log(failures === 0 ? '\nREVIEW QUEUE RULES PASSED' : `\n${failures} CHECK(S) FAILED`)
 process.exit(failures === 0 ? 0 : 1)
