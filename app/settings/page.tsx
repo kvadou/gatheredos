@@ -5,6 +5,7 @@ import { requireUser, requireHome } from '@/lib/supabase/home'
 import { listInvites } from '@/lib/actions/invites'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { gmailConfigured } from '@/lib/gmail/oauth'
+import { inboundAddress } from '@/lib/inbound/address'
 import { defaultNotificationPreferences, type NotificationPreferences } from '@/lib/notifications'
 
 export const metadata: Metadata = {
@@ -44,6 +45,15 @@ export default async function SettingsPage() {
     return { userId: m.user_id, role: m.role, name: p?.name ?? null, email: p?.email ?? '' }
   })
   const isOwner = members.find((m) => m.userId === user.id)?.role === 'owner'
+  // Read through the user's client on purpose: the editor-only policy on
+  // home_inbound_addresses is the gate, so a guest sees nothing without this
+  // page having to re-derive who may see a write credential.
+  const { data: inboundRow } = await supabase
+    .from('home_inbound_addresses')
+    .select('token')
+    .eq('home_id', home.id)
+    .maybeSingle()
+  const inboundToken = inboundRow?.token ?? null
   const invites = isOwner ? await listInvites() : []
   const { data: gmailConnection } = await createAdminClient()
     .from('external_connections' as never)
@@ -73,6 +83,7 @@ export default async function SettingsPage() {
         notifications={notificationRow ?? defaultNotificationPreferences}
         emailConfigured={Boolean(process.env.RESEND_API_KEY && process.env.WELCOME_FROM_EMAIL)}
         notificationsAvailable={!notificationError}
+        inboundAddress={inboundToken ? inboundAddress(inboundToken) : null}
       />
     </AppShell>
   )

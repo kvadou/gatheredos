@@ -71,7 +71,11 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY   — server-only (admin + seed)
 ANTHROPIC_API_KEY           — Ask GatheredOS
+INBOUND_EMAIL_DOMAIN        — forward-in domain (default in.gatheredos.com)
+INBOUND_WEBHOOK_SECRET      — Resend inbound webhook signing secret (whsec_...)
 ```
+Forward-in mail is dark until `INBOUND_WEBHOOK_SECRET` is set: the route answers 503 rather than
+accepting unsigned mail.
 
 ## Rules
 - Always TypeScript (.ts/.tsx) for new files

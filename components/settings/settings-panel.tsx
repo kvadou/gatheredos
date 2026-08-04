@@ -31,6 +31,7 @@ import {
   Wrench,
   Paperclip,
   ChevronDown,
+  Forward,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -38,6 +39,7 @@ import type { Database } from '@/lib/supabase/database.types'
 import { updateHome, removeMember, updateProfileName, updateNotificationPreferences } from '@/lib/actions/settings'
 import { deleteAccount } from '@/lib/actions/account'
 import { disconnectGmail, listImportLog, syncContractorEmailNow, type ImportLogEntry } from '@/lib/actions/gmail'
+import { createInboundAddress } from '@/lib/actions/inbound'
 import {
   createInvite,
   revokeInvite,
@@ -109,6 +111,7 @@ export function SettingsPanel({
   notifications,
   emailConfigured,
   notificationsAvailable,
+  inboundAddress,
 }: {
   home: HomeRow
   members: Member[]
@@ -120,6 +123,7 @@ export function SettingsPanel({
   notifications: NotificationPreferences
   emailConfigured: boolean
   notificationsAvailable: boolean
+  inboundAddress: string | null
 }) {
   const [editingHome, setEditingHome] = useState(false)
   const [editingName, setEditingName] = useState(false)
@@ -222,6 +226,7 @@ export function SettingsPanel({
             )}
           </div>
           {gmail.connected && <ContractorImportRow />}
+          <ForwardAddressRow initialAddress={inboundAddress} />
         </Group>
 
         {/* -------------------- Home Profile -------------------- */}
@@ -737,6 +742,122 @@ function ImportStatusDot({ status }: { status: string }) {
         : status === 'processing' ? 'bg-amber-500'
           : 'bg-muted-foreground/40'
   return <span className={cn('mt-1.5 size-1.5 shrink-0 rounded-full', tone)} aria-hidden />
+}
+
+/**
+ * The home's forward-in address.
+ *
+ * The alternative to Gmail OAuth, and for most people the only one available:
+ * `gmail.readonly` is a restricted scope, so connecting a mailbox needs Google
+ * verification. Forwarding needs nothing, and it works for Outlook and iCloud
+ * too. Minted on demand rather than at signup, because an unused secret address
+ * is a liability.
+ */
+function ForwardAddressRow({ initialAddress }: { initialAddress: string | null }) {
+  const [address, setAddress] = useState(initialAddress)
+  const [pending, startTransition] = useTransition()
+  const [copied, setCopied] = useState(false)
+  const [rotating, setRotating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  function create(rotate: boolean) {
+    setError(null)
+    startTransition(async () => {
+      const result = await createInboundAddress(rotate)
+      if (result.success) {
+        setAddress(result.address)
+        setRotating(false)
+      } else {
+        setError(result.error)
+      }
+    })
+  }
+
+  async function copy() {
+    if (!address) return
+    await navigator.clipboard.writeText(address)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="border-t border-border/60 px-4 py-3.5">
+      <div className="flex items-center gap-3.5">
+        <RowIcon Icon={Forward} />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium">Forward your contractor email</span>
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            Send or auto-forward appointment and invoice email to your private address, from any mailbox
+          </span>
+        </span>
+        {!address && (
+          <button
+            type="button"
+            onClick={() => create(false)}
+            disabled={pending}
+            className="shrink-0 rounded-xl bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
+          >
+            {pending ? 'Creating…' : 'Get address'}
+          </button>
+        )}
+      </div>
+
+      {address && (
+        <div className="mt-3 pl-11">
+          <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-secondary/30 px-3 py-2">
+            <code className="min-w-0 flex-1 truncate font-mono text-xs">{address}</code>
+            <button
+              type="button"
+              onClick={copy}
+              aria-label="Copy your forwarding address"
+              className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            >
+              {copied ? <Check className="size-3.5" strokeWidth={2.5} /> : <Copy className="size-3.5" strokeWidth={2} />}
+            </button>
+          </div>
+          {/* Anyone who has the address can write to this home, so say so plainly
+              rather than leaving it to be discovered. */}
+          <p className="mt-2 text-xs text-muted-foreground">
+            Keep this private. Anyone who has it can add records to your home.
+          </p>
+          {!rotating ? (
+            <button
+              type="button"
+              onClick={() => setRotating(true)}
+              className="mt-1.5 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+            >
+              Replace with a new address
+            </button>
+          ) : (
+            <div className="mt-2 rounded-xl border border-border/60 p-3">
+              <p className="text-xs">
+                The current address stops working immediately. Any forwarding rule using it will need updating.
+              </p>
+              <div className="mt-2.5 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => create(true)}
+                  disabled={pending}
+                  className="rounded-xl bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                >
+                  {pending ? 'Replacing…' : 'Replace it'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRotating(false)}
+                  className="rounded-xl border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent/40"
+                >
+                  Keep it
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && <p className="mt-3 pl-11 text-xs text-destructive">{error}</p>}
+    </div>
+  )
 }
 
 /* Disconnect Gmail with in-flight state, then refresh so the row flips back to

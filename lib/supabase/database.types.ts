@@ -12,121 +12,51 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
-      catalog_identifiers: {
+      account_entitlements: {
         Row: {
-          catalog_product_id: string
           created_at: string
+          current_period_ends_at: string | null
+          granted_at: string
           id: string
-          kind: string
-          provider: string
-          value: string
+          plan: string
+          source: string
+          status: string
+          updated_at: string
+          user_id: string
         }
         Insert: {
-          catalog_product_id: string
           created_at?: string
+          current_period_ends_at?: string | null
+          granted_at?: string
           id?: string
-          kind: string
-          provider: string
-          value: string
+          plan?: string
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id: string
         }
         Update: {
-          catalog_product_id?: string
           created_at?: string
+          current_period_ends_at?: string | null
+          granted_at?: string
           id?: string
-          kind?: string
-          provider?: string
-          value?: string
+          plan?: string
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "catalog_identifiers_catalog_product_id_fkey"
-            columns: ["catalog_product_id"]
-            isOneToOne: false
-            referencedRelation: "catalog_products"
+            foreignKeyName: "account_entitlements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
-      }
-      catalog_products: {
-        Row: {
-          attributes: Json
-          brand: string | null
-          category: string | null
-          created_at: string
-          description: string | null
-          fetched_at: string
-          id: string
-          image_url: string | null
-          manufacturer: string | null
-          model: string | null
-          provider: string
-          provider_product_id: string
-          source_url: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          attributes?: Json
-          brand?: string | null
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          fetched_at?: string
-          id?: string
-          image_url?: string | null
-          manufacturer?: string | null
-          model?: string | null
-          provider: string
-          provider_product_id: string
-          source_url?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          attributes?: Json
-          brand?: string | null
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          fetched_at?: string
-          id?: string
-          image_url?: string | null
-          manufacturer?: string | null
-          model?: string | null
-          provider?: string
-          provider_product_id?: string
-          source_url?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
       }
       care_events: {
         Row: {
@@ -268,6 +198,95 @@ export type Database = {
           },
         ]
       }
+      catalog_identifiers: {
+        Row: {
+          catalog_product_id: string
+          created_at: string
+          id: string
+          kind: string
+          provider: string
+          value: string
+        }
+        Insert: {
+          catalog_product_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          provider: string
+          value: string
+        }
+        Update: {
+          catalog_product_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          provider?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_identifiers_catalog_product_id_fkey"
+            columns: ["catalog_product_id"]
+            isOneToOne: false
+            referencedRelation: "catalog_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalog_products: {
+        Row: {
+          attributes: Json
+          brand: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          fetched_at: string
+          id: string
+          image_url: string | null
+          manufacturer: string | null
+          model: string | null
+          provider: string
+          provider_product_id: string
+          source_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attributes?: Json
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          fetched_at?: string
+          id?: string
+          image_url?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          provider: string
+          provider_product_id: string
+          source_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attributes?: Json
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          fetched_at?: string
+          id?: string
+          image_url?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          provider?: string
+          provider_product_id?: string
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contractors: {
         Row: {
           company: string | null
@@ -402,12 +421,14 @@ export type Database = {
           data: Json
           doc_type: string | null
           error: string | null
-          file_id: string
+          file_id: string | null
           home_id: string
           id: string
           model: string | null
           raw_text: string | null
           search: unknown
+          source_kind: string
+          source_ref: string | null
           status: string
           updated_at: string
         }
@@ -417,12 +438,14 @@ export type Database = {
           data?: Json
           doc_type?: string | null
           error?: string | null
-          file_id: string
+          file_id?: string | null
           home_id: string
           id?: string
           model?: string | null
           raw_text?: string | null
           search?: unknown
+          source_kind?: string
+          source_ref?: string | null
           status?: string
           updated_at?: string
         }
@@ -432,12 +455,14 @@ export type Database = {
           data?: Json
           doc_type?: string | null
           error?: string | null
-          file_id?: string
+          file_id?: string | null
           home_id?: string
           id?: string
           model?: string | null
           raw_text?: string | null
           search?: unknown
+          source_kind?: string
+          source_ref?: string | null
           status?: string
           updated_at?: string
         }
@@ -658,6 +683,35 @@ export type Database = {
           },
         ]
       }
+      home_inbound_addresses: {
+        Row: {
+          created_at: string
+          home_id: string
+          rotated_at: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          home_id: string
+          rotated_at?: string | null
+          token: string
+        }
+        Update: {
+          created_at?: string
+          home_id?: string
+          rotated_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_inbound_addresses_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: true
+            referencedRelation: "homes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       home_invites: {
         Row: {
           accepted_by: string | null
@@ -814,6 +868,94 @@ export type Database = {
           {
             foreignKeyName: "homes_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      imported_messages: {
+        Row: {
+          attachment_file_ids: string[]
+          created_at: string
+          error: string | null
+          external_id: string
+          extraction_id: string | null
+          from_email: string | null
+          from_name: string | null
+          home_id: string
+          id: string
+          proposal_count: number
+          provider: string
+          sent_at: string | null
+          service_address: string | null
+          skip_reason: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+          user_id: string
+          vendor: string | null
+        }
+        Insert: {
+          attachment_file_ids?: string[]
+          created_at?: string
+          error?: string | null
+          external_id: string
+          extraction_id?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          home_id: string
+          id?: string
+          proposal_count?: number
+          provider?: string
+          sent_at?: string | null
+          service_address?: string | null
+          skip_reason?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id: string
+          vendor?: string | null
+        }
+        Update: {
+          attachment_file_ids?: string[]
+          created_at?: string
+          error?: string | null
+          external_id?: string
+          extraction_id?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          home_id?: string
+          id?: string
+          proposal_count?: number
+          provider?: string
+          sent_at?: string | null
+          service_address?: string | null
+          skip_reason?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id?: string
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "imported_messages_extraction_id_fkey"
+            columns: ["extraction_id"]
+            isOneToOne: false
+            referencedRelation: "extractions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "imported_messages_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "homes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "imported_messages_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1005,6 +1147,69 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monetization_research_responses: {
+        Row: {
+          activated: boolean
+          billing_period: string
+          created_at: string
+          home_id: string | null
+          id: string
+          plan: string
+          price_cents: number
+          prompt_key: string
+          reason: string | null
+          response: string
+          surface: string
+          user_id: string
+          value_theme: string | null
+        }
+        Insert: {
+          activated?: boolean
+          billing_period: string
+          created_at?: string
+          home_id?: string | null
+          id?: string
+          plan: string
+          price_cents: number
+          prompt_key: string
+          reason?: string | null
+          response: string
+          surface: string
+          user_id: string
+          value_theme?: string | null
+        }
+        Update: {
+          activated?: boolean
+          billing_period?: string
+          created_at?: string
+          home_id?: string | null
+          id?: string
+          plan?: string
+          price_cents?: number
+          prompt_key?: string
+          reason?: string | null
+          response?: string
+          surface?: string
+          user_id?: string
+          value_theme?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monetization_research_responses_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "homes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monetization_research_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1225,6 +1430,66 @@ export type Database = {
           },
         ]
       }
+      provider_availability: {
+        Row: {
+          capacity_notes: string | null
+          confirmed_at: string
+          confirmed_by: string
+          created_at: string
+          id: string
+          next_available_on: string | null
+          provider_id: string
+          source: string
+          status: string
+          typical_response_minutes: number | null
+          updated_at: string
+          valid_until: string
+        }
+        Insert: {
+          capacity_notes?: string | null
+          confirmed_at: string
+          confirmed_by: string
+          created_at?: string
+          id?: string
+          next_available_on?: string | null
+          provider_id: string
+          source: string
+          status?: string
+          typical_response_minutes?: number | null
+          updated_at?: string
+          valid_until: string
+        }
+        Update: {
+          capacity_notes?: string | null
+          confirmed_at?: string
+          confirmed_by?: string
+          created_at?: string
+          id?: string
+          next_available_on?: string | null
+          provider_id?: string
+          source?: string
+          status?: string
+          typical_response_minutes?: number | null
+          updated_at?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_availability_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_availability_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "provider_businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_businesses: {
         Row: {
           booking_modes: Json
@@ -1290,66 +1555,6 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
-      }
-      provider_availability: {
-        Row: {
-          capacity_notes: string | null
-          confirmed_at: string
-          confirmed_by: string
-          created_at: string
-          id: string
-          next_available_on: string | null
-          provider_id: string
-          source: string
-          status: string
-          typical_response_minutes: number | null
-          updated_at: string
-          valid_until: string
-        }
-        Insert: {
-          capacity_notes?: string | null
-          confirmed_at: string
-          confirmed_by: string
-          created_at?: string
-          id?: string
-          next_available_on?: string | null
-          provider_id: string
-          source: string
-          status?: string
-          typical_response_minutes?: number | null
-          updated_at?: string
-          valid_until: string
-        }
-        Update: {
-          capacity_notes?: string | null
-          confirmed_at?: string
-          confirmed_by?: string
-          created_at?: string
-          id?: string
-          next_available_on?: string | null
-          provider_id?: string
-          source?: string
-          status?: string
-          typical_response_minutes?: number | null
-          updated_at?: string
-          valid_until?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "provider_availability_confirmed_by_fkey"
-            columns: ["confirmed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "provider_availability_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: true
-            referencedRelation: "provider_businesses"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       provider_pilot_simulations: {
         Row: {
@@ -2314,12 +2519,48 @@ export type Database = {
           work_performed?: string
         }
         Relationships: [
-          { foreignKeyName: "service_outcomes_appointment_id_fkey"; columns: ["appointment_id"]; isOneToOne: true; referencedRelation: "service_appointments"; referencedColumns: ["id"] },
-          { foreignKeyName: "service_outcomes_care_event_id_fkey"; columns: ["care_event_id"]; isOneToOne: false; referencedRelation: "care_events"; referencedColumns: ["id"] },
-          { foreignKeyName: "service_outcomes_home_id_fkey"; columns: ["home_id"]; isOneToOne: false; referencedRelation: "homes"; referencedColumns: ["id"] },
-          { foreignKeyName: "service_outcomes_invoice_file_id_fkey"; columns: ["invoice_file_id"]; isOneToOne: false; referencedRelation: "files"; referencedColumns: ["id"] },
-          { foreignKeyName: "service_outcomes_service_case_id_home_id_fkey"; columns: ["service_case_id", "home_id"]; isOneToOne: false; referencedRelation: "service_cases"; referencedColumns: ["id", "home_id"] },
-          { foreignKeyName: "service_outcomes_submitted_by_fkey"; columns: ["submitted_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          {
+            foreignKeyName: "service_outcomes_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "service_appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_outcomes_care_event_id_fkey"
+            columns: ["care_event_id"]
+            isOneToOne: false
+            referencedRelation: "care_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_outcomes_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "homes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_outcomes_invoice_file_id_fkey"
+            columns: ["invoice_file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_outcomes_service_case_id_home_id_fkey"
+            columns: ["service_case_id", "home_id"]
+            isOneToOne: false
+            referencedRelation: "service_cases"
+            referencedColumns: ["id", "home_id"]
+          },
+          {
+            foreignKeyName: "service_outcomes_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       service_quality_reviews: {
@@ -2607,6 +2848,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      authorize_household_service_booking: {
+        Args: { p_case_id: string; p_offer_id: string }
+        Returns: Json
+      }
       consume_service_authorization: {
         Args: { p_authorization_id: string; p_scope_hash: string }
         Returns: {
@@ -2676,12 +2921,63 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_household_service_case: { Args: { p_case_id: string }; Returns: Json }
       is_home_member: { Args: { home: string }; Returns: boolean }
       is_home_owner: { Args: { home: string }; Returns: boolean }
       is_home_writer: { Args: { home: string }; Returns: boolean }
       is_valid_service_case_transition: {
         Args: { from_status: string; to_status: string }
         Returns: boolean
+      }
+      record_household_calendar_event: {
+        Args: { p_case_id: string; p_identifier: string }
+        Returns: undefined
+      }
+      record_household_service_outcome: {
+        Args: {
+          p_case_id: string
+          p_final_cost?: number
+          p_invoice_file_id?: string
+          p_labor_warranty?: string
+          p_occurred_on?: string
+          p_parts_summary?: string
+          p_private_feedback?: string
+          p_provider_communication?: number
+          p_provider_timeliness?: number
+          p_resolution: string
+          p_work_performed: string
+        }
+        Returns: {
+          appointment_id: string
+          care_event_id: string | null
+          created_at: string
+          final_cost: number | null
+          home_id: string
+          id: string
+          invoice_file_id: string | null
+          labor_warranty: string | null
+          occurred_on: string
+          parts_summary: string | null
+          private_feedback: string | null
+          provider_communication: number | null
+          provider_timeliness: number | null
+          resolution: string
+          service_case_id: string
+          status: string
+          submitted_by: string
+          updated_at: string
+          work_performed: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_outcomes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      report_household_service_exception: {
+        Args: { p_case_id: string; p_kind: string; p_note: string }
+        Returns: undefined
       }
       shares_home_with: { Args: { other: string }; Returns: boolean }
       transition_service_case: {
@@ -2855,9 +3151,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

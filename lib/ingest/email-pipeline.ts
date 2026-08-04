@@ -1,11 +1,9 @@
-import { createHash } from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { decryptToken } from '@/lib/gmail/oauth'
 import { accessTokenFrom, getAttachment, getMessage, listMessageIds } from '@/lib/gmail/client'
-import {
-  header, ingestableAttachments, senderEmail, senderName, type GmailMessage,
-} from '@/lib/gmail/message'
-import { applyCascade, ingestFile } from '@/lib/ingest/pipeline'
+import { header, ingestableAttachments, senderEmail, senderName } from '@/lib/gmail/message'
+import { applyCascade } from '@/lib/ingest/pipeline'
+import { fileAttachments } from '@/lib/ingest/attachments'
 import { extractEmail, gmailQuery, vendorFor, wideQuery } from '@/lib/ingest/email'
 import type { Database } from '@/lib/supabase/database.types'
 
@@ -221,7 +219,17 @@ async function ingestMessage(
     1,
   )
 
-  const fileIds = await fileAttachments(db, accessToken, home.id, msg)
+  const fileIds = await fileAttachments({
+    db,
+    homeId: home.id,
+    messageId: msg.id,
+    source: 'email',
+    attachments: ingestableAttachments(msg).map((att) => ({
+      filename: att.filename,
+      mimeType: att.mimeType,
+      bytes: () => getAttachment(accessToken, msg.id, att.attachmentId),
+    })),
+  })
 
   await upsertLog(db, {
     ...base,
@@ -240,70 +248,4 @@ async function upsertLog(db: Admin, row: Record<string, unknown>): Promise<void>
     .from('imported_messages' as never)
     .upsert(row as never, { onConflict: 'home_id,provider,external_id' } as never)
   if (error) throw error
-}
-
-/**
- * Attached invoices and photos become real library files, which routes them
- * into the document extraction engine that already reads receipts and
- * warranties. Content-hash dedupe means re-syncing never stores twice.
- */
-async function fileAttachments(
-  db: Admin,
-  accessToken: string,
-  homeId: string,
-  msg: GmailMessage,
-): Promise<string[]> {
-  const ids: string[] = []
-  for (const att of ingestableAttachments(msg)) {
-    const bytes = await getAttachment(accessToken, msg.id, att.attachmentId)
-    const hash = createHash('sha256').update(bytes).digest('hex')
-
-    const { data: existing } = await db
-      .from('files')
-      .select('id')
-      .eq('home_id', homeId)
-      .eq('content_hash', hash)
-      .maybeSingle()
-    if (existing) {
-      ids.push(existing.id)
-      continue
-    }
-
-    // Attacker-controlled filename. Collapse to word chars, then strip any
-    // remaining dot run so `..` can never appear in the object key, and fall
-    // back to a fixed name when nothing usable survives.
-    const safeName = (att.filename.replace(/[^\w.\-]+/g, '_').replace(/\.{2,}/g, '.').replace(/^\.+/, '') || 'attachment')
-      .slice(0, 120)
-    const path = `${homeId}/email/${msg.id}/${safeName}`
-    const { error: upErr } = await db.storage
-      .from('home-files')
-      .upload(path, bytes, { contentType: att.mimeType, upsert: false })
-    if (upErr) {
-      console.error(`[email-ingest] attachment upload failed (${path}):`, upErr)
-      continue
-    }
-
-    const { data: file, error } = await db
-      .from('files')
-      .insert({
-        home_id: homeId,
-        type: att.mimeType.startsWith('image/') ? 'photo' : 'receipt',
-        name: safeName,
-        storage_path: path,
-        content_hash: hash,
-        meta: { source: 'email', gmail_message_id: msg.id },
-        extraction_status: 'pending',
-      } as never)
-      .select('id')
-      .single()
-    if (error || !file) {
-      console.error('[email-ingest] attachment file insert failed:', error)
-      continue
-    }
-    ids.push(file.id)
-    // Sequential, not fire-and-forget: a sync is already a background job, and
-    // one Claude call at a time keeps the cost per run predictable.
-    await ingestFile(file.id).catch((err) => console.error('[email-ingest] attachment ingest failed:', err))
-  }
-  return ids
 }

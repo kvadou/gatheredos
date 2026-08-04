@@ -18,6 +18,7 @@
     "reprocess:email": "node --env-file=.env.local --import tsx scripts/reprocess-email.ts",
     "test:spend-rules": "node --env-file=.env.local --import tsx scripts/test-spend-rules.ts",
     "test:review-queue": "node --env-file=.env.local --import tsx scripts/test-review-queue.ts",
+    "test:inbound": "node --env-file=.env.local --import tsx scripts/test-inbound.ts",
     "cleanup:queue": "node --env-file=.env.local --import tsx scripts/cleanup-queue.ts",
     "cleanup:spend": "node --env-file=.env.local --import tsx scripts/cleanup-spend.ts"
   },
