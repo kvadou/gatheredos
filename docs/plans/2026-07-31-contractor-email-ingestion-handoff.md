@@ -1,9 +1,11 @@
 # Contractor email ingestion — session handoff
 
-**Dates:** 2026-07-30 → 2026-07-31
+**Dates:** 2026-07-30 → 2026-08-03
 **Branch:** master (all pushed, Vercel deploys from master)
-**Commits:** `e4ee752`, `53033c2`, `beae2fe`, `3523584`, `812de89`
-**Status:** live on gatheredos.com, working against Doug's real inbox
+**Commits:** `e4ee752`, `53033c2`, `beae2fe`, `3523584`, `812de89`, `b0dca47`, `6e3405d`, `88b1380`,
+`2483143`, `792cd34`, `5d6c630`
+**Status:** live on gatheredos.com, verified against Doug's real inbox. Forward-in address shipped
+but dark pending DNS — see `docs/plans/2026-08-03-forward-in-address.md`.
 
 ---
 
@@ -134,26 +136,81 @@ yet been exercised against real mail.
 
 ## Next session — start here
 
-1. **Re-run Import on `812de89`** and confirm B&D / Hero / Elander now produce dated visit records,
-   not just contractor cards. This is the one unverified fix.
-2. **Doug must accept/reject the 4 contractor cards.** A contractor that never touched the house is
-   a false positive and the failure mode that matters most.
-3. ~~**Re-opening rows for reprocessing**~~ — **done (2026-07-31).** `pnpm reprocess:email --email
-   <addr>` (`scripts/reprocess-email.ts`). Dry run by default; `--apply` deletes. Keeps any row that
-   left a trace (a suggestion, or a `care_events`/`care_tasks`/`timeline_events` row stamped with its
-   `source_key`), and holds back confidently-rejected mail — the model's `not about work at this
-   home` verdict does not depend on the routing rules that get tuned, so re-reading 24 newsletters
-   would just re-spend 24 Claude calls. `--include-rejected` overrides that.
-4. ~~**`processing` rows can strand**~~ — **done (2026-07-31).** `sweepStranded()` runs at the top of
-   every sync: `processing` rows untouched for 15 minutes flip to `failed`, which both tells the
-   truth in the log and drops them out of the done/skipped dedupe set so the next run retries them.
-5. ~~**No UI surfaces the import log**~~ — **done (2026-07-31).** "What we read" disclosure under
-   Import service history, fed by `listImportLog()` (user's own client, RLS-scoped). Defaults to the
-   messages that produced something or failed; the skipped ones collapse behind a count. Each row
-   reads sender, subject, date, outcome and attachment count.
-6. **Deferred by design:** MCP server over the home (read tools + `open_service_case`), inbound
-   forwarding address (no OAuth, no 7-day expiry, no scope review — the cheaper path if weekly
-   reconnect gets annoying before verification is worth it), A2A endpoint.
+**All code work is committed and pushed. Two things are waiting on Doug, one is waiting on DNS.**
+
+1. **Accept or reject the 8 pending cards** (`/` dashboard). The queue is finally short and real:
+   4 contractors, 1 water heater, 2 people-facts, 1 Hero care_event. A contractor that never touched
+   the house is a false positive and the failure mode that matters most here.
+   - Note: the water heater card's `installed_on` (2021-02-04) came off an *estimate*, before the
+     quote rule landed. Reject the date if nothing was installed that day.
+2. **Turn on the forward-in address.** Code shipped and verified end to end, dark until the Resend
+   MX records and `INBOUND_WEBHOOK_SECRET` exist. Four steps, all in
+   `docs/plans/2026-08-03-forward-in-address.md`. This is the one that unblocks users who are not
+   Doug — Gmail OAuth cannot serve them until Google verification.
+3. **Multi-property.** The 2020 B&D estimates name 7064 Peony Lane N, not the current home.
+   `service_address` is recorded but never routed on, so pre-move mail lands in the current home.
+   Decide before onboarding anyone who has moved.
+4. **Deferred by design:** MCP server over the home (read tools + `open_service_case`), A2A endpoint,
+   Google verification itself (privacy policy, homepage, demo video, CASA assessment).
+
+### Smaller, known, not urgent
+- **`processing` rows only get swept by a Gmail sync.** `sweepStranded()` runs at the top of
+  `syncContractorEmail`, so a home that only ever forwards never sweeps.
+- **No "we got it" feedback on forwarding.** Forwarded mail shows in "What we read", but nothing
+  confirms receipt at the moment of forwarding. The outbound sender is already configured.
+- **`database.types.ts` was regenerated** on 2026-08-03 after drifting badly (it was missing
+  `imported_messages` and several other tables — the reason the codebase is littered with
+  `as never` casts). It drops in clean. Removing those casts is a standalone tidy-up.
+
+---
+
+## Retrospective — 2026-07-31 → 2026-08-03
+
+Six commits: `6e3405d`, `88b1380`, `2483143`, `792cd34`, `5d6c630` (plus `b0dca47`, this doc).
+
+**One bug class, found at four different layers.** Nearly everything fixed this session was the same
+mistake wearing different clothes: *identity keyed on the source rather than on the thing*, and its
+sibling, *one confidence score for a whole extraction rather than per claim*.
+
+| Layer | Symptom | Root cause |
+|---|---|---|
+| Contractors (prior session) | known contractor discarded | one confidence for the whole email |
+| Visit records (prior session) | 7 messages, 1 care_event | same, one level down |
+| Spend | $26,631 recorded against $168.87 paid | quotes indistinguishable from invoices; key was the file |
+| Review queue | 37 cards, 26 of them noise | key was the model's prose; findings ungated |
+
+The spend number is the one to remember: **$26,631.09 → $168.87**. Three good/better/best option
+sheets from one plumbing visit, each counted as a completed purchase, each duplicated because
+ServiceTitan re-renders the PDF per send so the content hash never matched.
+
+**What actually found the bugs: looking at the data.** Not review, not tests. The fixtures were
+green the whole time. Every real defect this session surfaced by querying what was actually in the
+tables and reading it — the 37-card queue, the 13 care_events, the five spellings of one water
+heater. The lesson is cheap to apply: after any extraction feature ships, go read the rows.
+
+**What worked, worth repeating:**
+- **Dry run by default, `--apply` to commit.** All three repair scripts (`reprocess:email`,
+  `cleanup:spend`, `cleanup:queue`) print what they would do and change nothing. Every one of them
+  found something worth checking before deletion.
+- **Verify the flagged rows, not the count.** `cleanup:spend` wanted to delete $1,941 of B&D. Before
+  running it, checked *which marker fired* — both PDFs said `ESTIMATE #` in the header. True
+  positives, but the check is what made deleting them safe.
+- **Write the test with the real strings.** `test-review-queue.ts` uses the literal five spellings
+  from the queue. It immediately caught a false positive in the *first* draft of the service rule:
+  "Maintenance hatch" is a real fixture, and a leading-keyword match would have silently dropped it.
+- **Asymmetric rules, stated out loud.** `looksLikeEstimate` biases toward calling things estimates
+  (a missed one corrupts money); `looksLikeService` biases toward keeping (a dropped fixture never
+  reaches the user). Both directions are written in the comments so the next change does not flip one.
+
+**Tooling gotchas that cost real time:**
+- `pnpm start` does **not** die to `pkill -f "next start"` — the listener is `next-server`. Killing
+  the wrong name leaves a server running against a rebuilt `.next`, which serves stale markup and
+  500s on chunks. Looks exactly like "my change did not build."
+- Verifying a logged-in route locally: Supabase's redirect allowlist has no localhost entry, so a
+  magic link always bounces to prod. `generateLink` → `verifyOtp` → write the session as a
+  `sb-<ref>-auth-token` cookie into a playwright storage-state file. Delete it after.
+- `import 'server-only'` makes a module unimportable from a tsx script. Same resolution as
+  `lib/gmail/message.ts`: keep the marker off modules the checks need to reach.
 
 ---
 
